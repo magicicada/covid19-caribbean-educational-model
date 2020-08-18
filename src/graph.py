@@ -58,8 +58,20 @@ class Graph:
         self.num_infected = simulation_config["num_infected"]
         self.graph_config = simulation_config["graph_config"]
 
+    def create_skew_graph(self, age_structure, infection_rate):
+        return None
+    
+    def create_regular_graph(self, age_structure, infection_rate):
+        return None
+    
+    def create_many_cliques(self, age_structure, infection_rate):
+        return None
+    
+    def create_random_geometric(self, age_atructure, infection_rate):
+        return None
+
     def create_graph(self, age_structure, infection_rate):
-        """Create a navigable small world graph
+        """Create a random AMENDED geometric
 
         Parameters
         ----------
@@ -70,12 +82,18 @@ class Graph:
         """
 
         self.infection_rate = infection_rate
-
-        self._set_navigable_small_world_graph(
-            age_structure=age_structure,
-            short_connection_diameter=self.graph_config["params"]["short_connection_diameter"],
-            long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
-            decay=self.graph_config["params"]["decay"])
+        
+        graph_type = 'regular'
+        if graph_type == 'geometric':
+           self._set_random_geometric_graph(age_structure=age_structure)
+        elif graph_type == 'regular':
+           self._set_random_regular_graph(age_structure=age_structure)
+        else:
+            self._set_navigable_small_world_graph(
+                age_structure=age_structure,
+                short_connection_diameter=self.graph_config["params"]["short_connection_diameter"],
+                long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
+                decay=self.graph_config["params"]["decay"])
 
     def set_group_interaction_edges(self, behaviour, node, other_nodes,
                                     group_size):
@@ -93,9 +111,9 @@ class Graph:
             Number of nodes in a group
         """
 
-        if behaviour == "food_shopping":
-            # swap other nodes for only close nodes
-            other_nodes = self.close_nodes_arr[node].nonzero()[0].tolist()
+        # if behaviour == "food_shopping":
+        #     # swap other nodes for only close nodes
+        #     other_nodes = self.close_nodes_arr[node].nonzero()[0].tolist()
 
         # set group size
         size = group_size if group_size <= len(other_nodes) else len(other_nodes)
@@ -165,7 +183,28 @@ class Graph:
         if not(self.graph.has_edge(*pair)):
             self.graph.add_edge(*pair, weight=self.infection_rate,
                                 interaction_edge=True)
-
+    
+    
+    def _set_random_regular_graph(self, age_structure):
+        num_people = sum(age_structure.values())
+        print(num_people)
+        graph = nx.random_regular_graph(0, num_people)
+        
+       # set the graph and add infection attribute
+        self.graph = graph
+        self._set_generic_weights()
+        self._set_ages(age_structure)
+    
+    def _set_random_geometric_graph(self, age_structure):
+        num_people = sum(age_structure.values())
+        graph = nx.random_geometric_graph(num_people, 0.001)
+        
+       # set the graph and add infection attribute
+        self.graph = graph
+        self._set_generic_weights()
+        self._set_ages(age_structure)
+        
+    
     def _set_navigable_small_world_graph(self, age_structure,
                                          short_connection_diameter,
                                          long_connection_diameter,
@@ -293,3 +332,5 @@ class Graph:
         age_group_dict = {i: age_group_list[i] for i in range(len(age_group_list))}
 
         nx.set_node_attributes(self.graph, age_group_dict, "age_group")
+
+    
