@@ -25,14 +25,16 @@ class Model:
               "I": "Symptomatic",
               "H": "Hospitalised",
               "D": "Dead",
-              "R": "Recovered"}
+              "R": "Recovered",
+              "T_P": "Tested_Isolated_Positive",
+              "T_S": "Tested_Isolated_Susceptible"}
 
     def __init__(self, params, graph, console_log=False):
         self.params = params
         self.graph = graph
         self.console_log = console_log
 
-    def basic_simulation(self):
+    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
         """Run the simulation"""
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
@@ -53,11 +55,15 @@ class Model:
 
             # use map for better performance
             # use list to force map evaluation
-            list(map(self._add_interactions, nodes))
+            # list(map(self._add_interactions, nodes))
             list(map(self._do_progression, nodes))
             list(map(self._do_infection, nodes))
+            
+            for node in nodes:
+                self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+            # list(map(self._do_testing, nodes))
 
-            self._remove_interactions()
+            # self._remove_interactions()
 
         if self.console_log:
             self.print_state_counts(self.graph.time_horizon)
@@ -65,7 +71,7 @@ class Model:
     def get_results(self):
         """Returns dictionary with results of the simulation
 
-        The results are reported every 7 steps.
+        The results are reported every 7 steps. - AMENDED TO DAILY
 
         Returns
         -------
@@ -75,7 +81,7 @@ class Model:
 
         output_dict = {key: [] for key in Model.STATES.keys()}
 
-        for step in range(1, self.graph.time_horizon + 1, 7):
+        for step in range(1, self.graph.time_horizon + 1, 1):
             counts = self._get_state_counts(step)
             for state in output_dict:
                 output_dict[state].append(counts[state])
@@ -281,6 +287,53 @@ class Model:
             list(map(partial(self._infect_neighbours, node),
                      self.graph.graph.neighbors(node)))
 
+
+    def _do_testing(self, node, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
+        """Do the testing and isolation
+
+        Parameters
+        ----------
+        node : int
+            Name of node in the graph"""
+        state = self.states_dict[self.curr_time][node]
+        
+        # get test result
+        thisLuck = random.random()
+
+        if state == "I" or state == "A":
+            if thisLuck < testProb:
+                self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+        elif state == 'S':
+            if thisLuck < testProb*false_positive:
+                self._isolate_self_and_neighbours(node, false_positive=True, prob_trace_contact=prob_trace_contact)
+        
+            
+            # list(map(partial(self._infect_neighbours, node),
+            #          self.graph.graph.neighbors(node)))
+            
+    def _isolate_self_and_neighbours(self, node, false_positive=False, prob_trace_contact=0.0):
+        """Right now just isolates this node
+
+        Parameters
+        ----------
+        node : int
+            Label of the node
+        """
+        if false_positive:
+            self.states_dict[self.curr_time + 1][node] = "T_S"
+        else:
+            self.states_dict[self.curr_time + 1][node] = "T_P"
+            
+        neighbours = self.graph.graph.neighbors(node)
+        for guy in neighbours:
+            state = self.states_dict[self.curr_time][guy]
+            thisLuck  = random.random()
+            if thisLuck < prob_trace_contact:
+                if state == "I" or state == "A":
+                    self.states_dict[self.curr_time + 1][guy] = "T_P"
+                elif state == 'S':
+                    self.states_dict[self.curr_time + 1][guy] = "T_S"
+    
     def _infect_neighbours(self, node, neighbour):
         """Infect a neighbour node
 

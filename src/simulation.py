@@ -69,7 +69,7 @@ class Simulation:
             behaviours=app_input_data["behaviours"],
         )
 
-    def create_graph(self):
+    def create_graph(self, graph_type, edges_per_vert=2):
         """Create graph based on the supplied parameters
 
         Raises
@@ -90,7 +90,10 @@ class Simulation:
 
         self.graph.create_graph(
             age_structure=self.params.age_structure,
-            infection_rate=self.params.generic_infection)
+            infection_rate=self.params.generic_infection,
+            graph_type=graph_type,
+            edgesPerVert = edges_per_vert
+            )
 
     def save_graph_to_file(self, filename):
         """Save current graph object to a file
@@ -134,7 +137,7 @@ class Simulation:
 
         self.graph = loaded_graph
 
-    def run_single(self):
+    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
         """Run a single simulation
 
         Returns
@@ -151,11 +154,11 @@ class Simulation:
 
         model = Model(self.params, self.graph, self.verbose)
 
-        model.basic_simulation()
+        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
 
         return model.get_results()
 
-    def run_multiple(self, n):
+    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
         """Run multiple simulations and return an averaged result
 
         Parameters
@@ -171,7 +174,7 @@ class Simulation:
         """
 
         # run simulations and collect results
-        all_results = [self.run_single() for _ in range(n)]
+        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact) for _ in range(n)]
 
         # get averaged results
         averaged = {}

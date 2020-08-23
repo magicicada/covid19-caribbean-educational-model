@@ -5,6 +5,7 @@ Runs the simulation once based on the files provided
 import argparse
 import json
 import os
+import matplotlib.pyplot as plt
 from datetime import datetime
 
 from src.simulation import Simulation
@@ -77,30 +78,47 @@ simulation = Simulation(infection_data_filename,
                         verbose=not(args.quiet))
 simulation.set_app_input_from_file(app_input_filename)
 
-if args.load_graph_dir:
-    graph_filename = os.path.join(args.load_graph_dir, "{}-graph.pkl".format(simulation.params.community))
-    simulation.load_graph_from_file(graph_filename)
-    simulation.load_graph_filename = graph_filename
-else:
-    simulation.create_graph('powerlaw_cluster', edges_per_vert=10)
-
-# run the simulation
-results = simulation.run_multiple(args.number_of_runs)
-
-print(results)
-
-if args.output_filename:
-    json_str = json.dumps(results)
-
-    with open(args.output_filename, "w") as f:
-        f.write(json_str)
-
-if args.graph_plot_filename:
-    simulation.graph.draw_graph(args.graph_plot_filename)
-
-if args.doubling_time_plot_filename:
-    simulation.model.plot_doubling_time(args.doubling_time_plot_filename)
-
-if not args.quiet:
-    print()
-    print(datetime.now() - start_time)
+testProbs = [0.01, 0.05, 0.1]
+tracing_efficiencies = [0.0, 0.5, 1.0]
+for graph_type in ['powerlaw_cluster', 'regular', 'geometric']:
+    plt.clf()
+    fig, axs = plt.subplots(len(testProbs), len(tracing_efficiencies), figsize=(15, 15))
+    
+    # plt.subplots_adjust(top=1.2)
+    for i in range(len(testProbs)):
+        for j in range(len(tracing_efficiencies)):
+            testProb=testProbs[i]
+            tracing_efficiency = tracing_efficiencies[j]
+            
+            simulation.create_graph(graph_type, edges_per_vert=10)
+            
+            # run the simulation
+            results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.023, prob_trace_contact=tracing_efficiency)
+            
+            print(results)
+            lines_of_interest=['S', 'E', 'I', 'A', 'R', 'T_S', 'T_P']
+            
+            for line in results:
+                print(results[line])
+                if line in lines_of_interest:
+                    axs[i, j].plot(range(len(results[line])), results[line], label=str(line))
+            # axs[i, j].legend()
+            axs[i, j].set_title('Testing every :' + str(1/testProb) + " days, \n Tracing efficiency: " + str(tracing_efficiency))
+            # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
+            
+            if args.output_filename:
+                json_str = json.dumps(results)
+            
+                with open(args.output_filename, "w") as f:
+                    f.write(json_str)
+            # 
+            # if args.graph_plot_filename:
+            #     simulation.graph.draw_graph(args.graph_plot_filename)
+            
+            if args.doubling_time_plot_filename:
+                simulation.model.plot_doubling_time(args.doubling_time_plot_filename)
+            
+            if not args.quiet:
+                print()
+                print(datetime.now() - start_time)
+    plt.savefig('model_output_' + graph_type+ '.png')

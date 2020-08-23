@@ -42,6 +42,36 @@ class Graph:
         # Simulation structures
         self.close_nodes_arr = None
 
+    def draw_graph(self, filename):
+        """Save a graph visualisation to a file
+
+        The method is intended for development purposes only.
+        If a graph has more than 100 nodes the method is not executed.
+
+        Parameters
+        ----------
+        filename : str
+            Path to where to save the resulting visualisation
+        """
+
+        if len(self.graph.nodes()) > 100:
+            print("WARNING - [draw_graph] more than 100 nodes in the graph.")
+            # return
+
+        layout = nx.spring_layout(self.graph)
+        weights = [1 + self.graph[u][v]["weight"]
+                   if self.graph[u][v] else 1
+                   for u, v in self.graph.edges()]
+
+        nx.draw(self.graph, layout,
+                with_labels=False,
+                edges=self.graph.edges(),
+                width=weights,
+                node_size=30)
+
+        plt.savefig(filename)
+
+
     def set_simulation_config_from_file(self, filename):
         """Load simulation config from a JSON file
 
@@ -70,8 +100,8 @@ class Graph:
     def create_random_geometric(self, age_atructure, infection_rate):
         return None
 
-    def create_graph(self, age_structure, infection_rate):
-        """Create a random AMENDED geometric
+    def create_graph(self, age_structure, infection_rate, graph_type='regular', edgesPerVert=4):
+        """Create a random AMENDED geometric, etc
 
         Parameters
         ----------
@@ -83,18 +113,25 @@ class Graph:
 
         self.infection_rate = infection_rate
         
-        graph_type = 'regular'
         if graph_type == 'geometric':
-           self._set_random_geometric_graph(age_structure=age_structure)
+           self._set_random_geometric_graph(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'regular':
-           self._set_random_regular_graph(age_structure=age_structure)
+           self._set_random_regular_graph(age_structure=age_structure, edgesPerVert=edgesPerVert)
+        elif graph_type == 'powerlaw_cluster':
+            self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         else:
             self._set_navigable_small_world_graph(
                 age_structure=age_structure,
                 short_connection_diameter=self.graph_config["params"]["short_connection_diameter"],
                 long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
                 decay=self.graph_config["params"]["decay"])
-
+        
+        print('number of edges: ' + str(len(self.graph.edges())))
+        print('clustering coefficient '  + str(nx.average_clustering(self.graph)))
+        # self.draw_graph(graph_type + ".trial.pdf")
+        
+        
+        
     def set_group_interaction_edges(self, behaviour, node, other_nodes,
                                     group_size):
         """Set edges in the graph based on specified group interaction
@@ -142,34 +179,7 @@ class Graph:
             if "interaction_edge" in self.graph[u][v]:
                 self.graph.remove_edge(u, v)
 
-    def draw_graph(self, filename):
-        """Save a graph visualisation to a file
 
-        The method is intended for development purposes only.
-        If a graph has more than 100 nodes the method is not executed.
-
-        Parameters
-        ----------
-        filename : str
-            Path to where to save the resulting visualisation
-        """
-
-        if len(self.graph.nodes()) > 100:
-            print("[draw_graph] more than 100 nodes in the graph. Skipping.")
-            return
-
-        layout = nx.spectral_layout(self.graph)
-        weights = [1 + self.graph[u][v]["weight"]
-                   if self.graph[u][v] else 1
-                   for u, v in self.graph.edges()]
-
-        nx.draw(self.graph, layout,
-                with_labels=True,
-                edges=self.graph.edges(),
-                width=weights,
-                node_size=200)
-
-        plt.savefig(filename)
 
     def _add_new_interaction_edge(self, pair):
         """Add a new interaction edge if it is not already existing
@@ -185,19 +195,33 @@ class Graph:
                                 interaction_edge=True)
     
     
-    def _set_random_regular_graph(self, age_structure):
+    def _set_powerlaw_cluster(self, age_structure, edgesPerVert=4):
         num_people = sum(age_structure.values())
-        print(num_people)
-        graph = nx.random_regular_graph(0, num_people)
+        graph = nx.powerlaw_cluster_graph(num_people, edgesPerVert, 0.3)
+        
+       # set the graph and add infection attribute
+        self.graph = graph
+        self._set_generic_weights()
+        self._set_ages(age_structure)        
+    
+    
+    def _set_random_regular_graph(self, age_structure, edgesPerVert=4):
+        num_people = sum(age_structure.values())
+        print(num_people)        
+        graph = nx.random_regular_graph(edgesPerVert*2, num_people)
         
        # set the graph and add infection attribute
         self.graph = graph
         self._set_generic_weights()
         self._set_ages(age_structure)
     
-    def _set_random_geometric_graph(self, age_structure):
+    def _set_random_geometric_graph(self, age_structure, edgesPerVert=4):
         num_people = sum(age_structure.values())
-        graph = nx.random_geometric_graph(num_people, 0.001)
+        # expected degree is n*pi*r^2
+        # so if degree is edgesPerVert*2, then r should be root(edgesPerVert*2/(n*pi))   - I'm going to lazily use 3.14 as pi
+        radius = math.sqrt(edgesPerVert*2/(num_people*3.14))
+        
+        graph = nx.random_geometric_graph(num_people, radius)
         
        # set the graph and add infection attribute
         self.graph = graph
