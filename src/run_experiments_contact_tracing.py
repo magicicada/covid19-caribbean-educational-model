@@ -78,29 +78,32 @@ simulation = Simulation(infection_data_filename,
                         verbose=not(args.quiet))
 simulation.set_app_input_from_file(app_input_filename)
 
-testProbs = [0.01, 0.05, 0.1]
-tracing_efficiencies = [0.0, 0.5, 1.0]
+testProbs = [0.01, 0.01]
+tracing_efficiencies = [0.0, 0.0]
 for graph_type in ['education_layered']:
 # ['powerlaw_cluster', 'regular', 'geometric']:
     plt.clf()
     fig, axs = plt.subplots(len(testProbs), len(tracing_efficiencies), figsize=(15, 15))
     
-    household_size_distribution = {4:0.2, 10:0.2, 2:0.5, 20:0.1}
-    number_activity_groups=1000
-    activity_size_distribution={5:0.5, 10:0.5}
+    household_size_distribution = {'first':{20:0.1, 10:0.4, 5:0.4, 3:0.1 }, 'upper':{10:0.1, 5:0.2, 3:0.6, 1:0.1}}
+    number_activity_groups=500
+    activity_size_distribution={'first':{5:0.5, 10:0.5}, 'upper':{5:0.5, 10:0.5}}
     
     # plt.subplots_adjust(top=1.2)
     for i in range(len(testProbs)):
         for j in range(len(tracing_efficiencies)):
             testProb=testProbs[i]
             tracing_efficiency = tracing_efficiencies[j]
+            test_style='highest_degree'
+            test_prob={'first':0.1, 'upper':0.1}
+            
             
             simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
             
             # run the simulation
-            results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.01, prob_trace_contact=tracing_efficiency)
+            results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency, test_style=test_style, test_prob=test_prob)
             
-            print(results)
+            # print(results)
             lines_of_interest=['S', 'E', 'I', 'A', 'R', 'T_S', 'T_P']
             
             for line in results:

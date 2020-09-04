@@ -1,4 +1,5 @@
 import itertools
+import collections
 import json
 import math
 import random
@@ -89,7 +90,8 @@ class Graph:
         self.graph_config = simulation_config["graph_config"]
 
 
-    def create_graph(self, age_structure, infection_rate, graph_type='regular', edgesPerVert=4, household_size_distribution = {4:0.2, 10:0.2, 2:0.5, 20:0.1}, number_activity_groups=1000, activity_size_distribution={5:0.5, 10:0.5}):
+    def create_graph(self, age_structure, infection_rate, graph_type='regular', edgesPerVert=4, household_size_distribution = {'first':{10:1.0}, 'upper':{3:1.0}}, number_activity_groups=1000, activity_size_distribution={'first':{5:1.0}, 'upper':{5:1.0}}):
+                     # 
         """Create a random AMENDED geometric, etc
 
         Parameters
@@ -110,7 +112,18 @@ class Graph:
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
             self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
-            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.01)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.05)
+            first_year_extras = 3
+            upper_year_extras = 1
+            
+            
+            first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
+            upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
+            # 
+            self._add_extra_contacts(self.graph, first_years, first_year_extras )
+            self._add_extra_contacts(self.graph, upper_years, upper_year_extras)
+            
+            
         else:
             self._set_navigable_small_world_graph(
                 age_structure=age_structure,
@@ -118,10 +131,10 @@ class Graph:
                 long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
                 decay=self.graph_config["params"]["decay"])
         
-        print('number of edges: ' + str(len(self.graph.edges())))
-        print('clustering coefficient '  + str(nx.average_clustering(self.graph)))
+        # print('number of edges: ' + str(len(self.graph.edges())))
+        # print('clustering coefficient '  + str(nx.average_clustering(self.graph)))
         # self.draw_graph(graph_type + ".trial.pdf")
-        
+        # self.plot_degree_distrib()
         
         
     def set_group_interaction_edges(self, behaviour, node, other_nodes,
@@ -198,31 +211,49 @@ class Graph:
         return None
     
     
-    def _set_household_groupings(self, age_structure, household_size_distribution, household_edge_weight=0.05):
-        num_people = sum(age_structure.values())
+    def _sub_household(self, num_people, graph, year_string, household_id, household_size_distribution, household_edge_weight=0.05):
         people_thus_far = 0
-        household_id = 0
-        graph = nx.Graph()
         while people_thus_far < num_people:
             generate_household_size = self.choose_from_distrib(household_size_distribution)
+            # print('generating a household of size ' + str(generate_household_size))
+            
             if people_thus_far + generate_household_size >= num_people:
                 generate_household_size = num_people - people_thus_far
                 # Make a clique of new people to add
             for i in range(generate_household_size):
-                graph.add_node((household_id, i), household=household_id)
+                graph.add_node((household_id, i), household=household_id, year=year_string)
             for i in range(generate_household_size):
                 for j in range(i+1, generate_household_size):
                     graph.add_edge((household_id, i), (household_id, j), weight=household_edge_weight)
             household_id = household_id +1
             people_thus_far = people_thus_far + generate_household_size
+        return household_id
+    
+    def _set_household_groupings(self, age_structure, household_size_distribution, household_edge_weight=0.05):
+        print(household_size_distribution)
+        num_people = sum(age_structure.values())
+        people_thus_far = 0
+        household_id = 0
+        graph = nx.Graph()
         
-        print('\n\n people thus far ' + str(people_thus_far))
+        # first years
+        num_first_year = math.floor(num_people/4)
+        household_id = self._sub_household(num_first_year, graph, 'first', household_id, household_size_distribution['first'], household_edge_weight=household_edge_weight)
+        
+        # upper years
+        num_upper_year = num_people - num_first_year
+        household_id = self._sub_household(num_upper_year, graph, 'upper', household_id, household_size_distribution['upper'], household_edge_weight=household_edge_weight)
+        
+        # print('\n\n people thus far ' + str(people_thus_far))
         
         self.graph = graph
         self._set_ages_uniform('(10, 19)')
-
-            
+    
+    
     def _add_secondary_groupings(self, number_activity_groups, activity_size_distribution, activity_edge_weight = 0.01):
+        
+        activity_size_distribution = activity_size_distribution['first']
+        
         graph = self.graph
         for i in range(number_activity_groups):
             group_size = self.choose_from_distrib(activity_size_distribution)
@@ -231,6 +262,17 @@ class Graph:
                 for j in range(i+1, len(group_members)):
                     if (group_members[i], group_members[j]) not in graph.edges():
                         graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
+    
+    def _add_extra_contacts(self, graph, vertex_set, m, extra_edge_weight=0.01):
+        n = len(vertex_set)
+        pref_att_graph = nx.barabasi_albert_graph(n, m)
+        nodes_list = list(pref_att_graph.nodes())
+        for i in range(len(nodes_list)):
+            for j in range(i+1, len(nodes_list)):
+                if (i, j) in pref_att_graph.edges() and (vertex_set[i], vertex_set[i]) not in graph.edges():
+                    graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
+        
+        
     
     
     
@@ -393,7 +435,6 @@ class Graph:
 
         random.shuffle(age_group_list)
         age_group_dict = {i: age_group_list[i] for i in range(len(age_group_list))}
-        print(age_group_dict)
         nx.set_node_attributes(self.graph, age_group_dict, "age_group")
 
     
@@ -408,6 +449,25 @@ class Graph:
         age_group_dict = {}
         for node in self.graph.nodes():
             age_group_dict[node] = single_age
-        
-        print(age_group_dict)
+
         nx.set_node_attributes(self.graph, age_group_dict, "age_group")
+        
+    
+    def plot_degree_distrib(self, filename='degree_distrib.png'):
+        G = self.graph
+        degree_sequence = sorted([d for n, d in G.degree()], reverse=True)  # degree sequence
+        print(degree_sequence)
+        # degreeCount = collections.Counter(degree_sequence)
+        # deg, cnt = zip(*degreeCount.items())
+        # print(deg)
+        # print(cnt)
+        
+        # fig, ax = plt.subplots()
+        # plt.bar(deg, cnt, width=0.80, color="b")
+        # 
+        # plt.title("Degree Histogram")
+        # plt.ylabel("Count")
+        # plt.xlabel("Degree")
+        # ax.set_xticks([d + 0.4 for d in deg])
+        # ax.set_xticklabels(deg)
+        # plt.savefig(filename)

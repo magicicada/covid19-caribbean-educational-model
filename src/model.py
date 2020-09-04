@@ -34,7 +34,7 @@ class Model:
         self.graph = graph
         self.console_log = console_log
 
-    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
+    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
         """Run the simulation"""
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
@@ -59,8 +59,17 @@ class Model:
             list(map(self._do_progression, nodes))
             list(map(self._do_infection, nodes))
             
-            for node in nodes:
-                self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+        
+            num_tests = testProb*len(nodes)
+            if test_style == 'highest_degree':
+                highest_degree_group = sorted(self.graph.degree, key=lambda x: x[1], reverse=True)[:num_tests]
+                self._do_strategic_testing_set(self.graph, highest_degree_group, test_prob_trace_contact=prob_trace_contact)
+            elif test_style == 'attribute_distrib':
+                _do_strategic_testing_category(self.graph, attribute_for_test=attribute_for_test, test_prob=test_distrib, test_prob_trace_contact=prob_trace_contact)
+            else:
+                # theseNodes = choose 
+                for node in nodes:
+                 self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
             # list(map(self._do_testing, nodes))
 
             # self._remove_interactions()
@@ -287,7 +296,16 @@ class Model:
             list(map(partial(self._infect_neighbours, node),
                      self.graph.graph.neighbors(node)))
 
-
+    
+    def _do_strategic_testing_set(self, graph, set_of_nodes, test_prob_trace_contact=0.0):
+        for node in set_of_nodes:
+            self._do_testing(node, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
+    
+    def _do_strategic_testing_category(self, graph, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, test_prob_trace_contact=0.0):
+        for node in graph.nodes():
+            attribute = graph[node][attribute_for_test]
+            self._do_testing(node, testProb=test_prob[attribute], false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
+    
     def _do_testing(self, node, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
         """Do the testing and isolation
 
@@ -312,7 +330,7 @@ class Model:
             #          self.graph.graph.neighbors(node)))
             
     def _isolate_self_and_neighbours(self, node, false_positive=False, prob_trace_contact=0.0):
-        """Right now just isolates this node
+        """Isolation for node and neighbours
 
         Parameters
         ----------

@@ -69,7 +69,7 @@ class Simulation:
             behaviours=app_input_data["behaviours"],
         )
 
-    def create_graph(self, graph_type, edges_per_vert=2, household_size_distribution = {4:0.2, 10:0.2, 2:0.5, 20:0.1}, number_activity_groups=1000, activity_size_distribution={5:0.5, 10:0.5}):
+    def create_graph(self, graph_type, edges_per_vert=2, household_size_distribution = {'first':{10:1.0}, 'upper':{3:1.0}}, number_activity_groups=1000, activity_size_distribution={'first':{5:1.0}, 'upper':{5:1.0}}):
         """Create graph based on the supplied parameters
 
         Raises
@@ -92,7 +92,13 @@ class Simulation:
             age_structure=self.params.age_structure,
             infection_rate=self.params.generic_infection,
             graph_type=graph_type,
-            edgesPerVert = edges_per_vert
+            edgesPerVert = edges_per_vert,
+            household_size_distribution=household_size_distribution,
+            number_activity_groups=number_activity_groups,
+            activity_size_distribution=activity_size_distribution
+            # test_style=None,
+            # attribute_for_test='year',
+            # test_prob={'first':0.1, 'upper':0.1}
             )
 
     def save_graph_to_file(self, filename):
@@ -137,7 +143,7 @@ class Simulation:
 
         self.graph = loaded_graph
 
-    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
+    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
         """Run a single simulation
 
         Returns
@@ -154,11 +160,11 @@ class Simulation:
 
         model = Model(self.params, self.graph, self.verbose)
 
-        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1})
 
         return model.get_results()
 
-    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
+    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
         """Run multiple simulations and return an averaged result
 
         Parameters
@@ -174,7 +180,7 @@ class Simulation:
         """
 
         # run simulations and collect results
-        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact) for _ in range(n)]
+        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob) for _ in range(n)]
 
         # get averaged results
         averaged = {}
