@@ -69,7 +69,7 @@ class Simulation:
             behaviours=app_input_data["behaviours"],
         )
 
-    def create_graph(self, graph_type, edges_per_vert=2):
+    def create_graph(self, graph_type, edges_per_vert=2, household_size_distribution = {4:0.2, 10:0.2, 2:0.5, 20:0.1}, number_activity_groups=1000, activity_size_distribution={5:0.5, 10:0.5}):
         """Create graph based on the supplied parameters
 
         Raises

@@ -88,19 +88,8 @@ class Graph:
         self.num_infected = simulation_config["num_infected"]
         self.graph_config = simulation_config["graph_config"]
 
-    def create_skew_graph(self, age_structure, infection_rate):
-        return None
-    
-    def create_regular_graph(self, age_structure, infection_rate):
-        return None
-    
-    def create_many_cliques(self, age_structure, infection_rate):
-        return None
-    
-    def create_random_geometric(self, age_atructure, infection_rate):
-        return None
 
-    def create_graph(self, age_structure, infection_rate, graph_type='regular', edgesPerVert=4):
+    def create_graph(self, age_structure, infection_rate, graph_type='regular', edgesPerVert=4, household_size_distribution = {4:0.2, 10:0.2, 2:0.5, 20:0.1}, number_activity_groups=1000, activity_size_distribution={5:0.5, 10:0.5}):
         """Create a random AMENDED geometric, etc
 
         Parameters
@@ -119,6 +108,9 @@ class Graph:
            self._set_random_regular_graph(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'powerlaw_cluster':
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
+        elif graph_type == 'education_layered':
+            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.01)
         else:
             self._set_navigable_small_world_graph(
                 age_structure=age_structure,
@@ -193,6 +185,53 @@ class Graph:
         if not(self.graph.has_edge(*pair)):
             self.graph.add_edge(*pair, weight=self.infection_rate,
                                 interaction_edge=True)
+    
+    
+    def choose_from_distrib(self, distrib):
+        curr_sum = 0
+        max_sum = random.random()
+        for value in distrib:
+            curr_sum += distrib[value]
+            if max_sum <= curr_sum:
+                return value
+            
+        return None
+    
+    
+    def _set_household_groupings(self, age_structure, household_size_distribution, household_edge_weight=0.05):
+        num_people = sum(age_structure.values())
+        people_thus_far = 0
+        household_id = 0
+        graph = nx.Graph()
+        while people_thus_far < num_people:
+            generate_household_size = self.choose_from_distrib(household_size_distribution)
+            if people_thus_far + generate_household_size >= num_people:
+                generate_household_size = num_people - people_thus_far
+                # Make a clique of new people to add
+            for i in range(generate_household_size):
+                graph.add_node((household_id, i), household=household_id)
+            for i in range(generate_household_size):
+                for j in range(i+1, generate_household_size):
+                    graph.add_edge((household_id, i), (household_id, j), weight=household_edge_weight)
+            household_id = household_id +1
+            people_thus_far = people_thus_far + generate_household_size
+        
+        print('\n\n people thus far ' + str(people_thus_far))
+        
+        self.graph = graph
+        self._set_ages_uniform('(10, 19)')
+
+            
+    def _add_secondary_groupings(self, number_activity_groups, activity_size_distribution, activity_edge_weight = 0.01):
+        graph = self.graph
+        for i in range(number_activity_groups):
+            group_size = self.choose_from_distrib(activity_size_distribution)
+            group_members = list(random.sample(graph.nodes(), group_size))
+            for i in range(len(group_members)):
+                for j in range(i+1, len(group_members)):
+                    if (group_members[i], group_members[j]) not in graph.edges():
+                        graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
+    
     
     
     def _set_powerlaw_cluster(self, age_structure, edgesPerVert=4):
@@ -354,7 +393,21 @@ class Graph:
 
         random.shuffle(age_group_list)
         age_group_dict = {i: age_group_list[i] for i in range(len(age_group_list))}
-
+        print(age_group_dict)
         nx.set_node_attributes(self.graph, age_group_dict, "age_group")
 
     
+    def _set_ages_uniform(self, single_age):
+        """Set age of a node based on the age structure of the population
+
+        Parameters
+        ----------
+        age_structure : dict
+            Dictionary indicating number of people in given age group
+        """
+        age_group_dict = {}
+        for node in self.graph.nodes():
+            age_group_dict[node] = single_age
+        
+        print(age_group_dict)
+        nx.set_node_attributes(self.graph, age_group_dict, "age_group")
