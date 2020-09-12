@@ -151,7 +151,7 @@ class Simulation:
         dict
             Results of the simulation
         """
-
+        print("In single run, test distribution is " +str(test_prob))
         if self.new_graph_per_run:
             if self.load_graph_filename:
                 self.load_graph_from_file(self.load_graph_filename)
@@ -160,7 +160,7 @@ class Simulation:
 
         model = Model(self.params, self.graph, self.verbose)
 
-        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1})
+        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob)
 
         return model.get_results()
 

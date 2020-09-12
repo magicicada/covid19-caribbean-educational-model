@@ -78,55 +78,62 @@ simulation = Simulation(infection_data_filename,
                         verbose=not(args.quiet))
 simulation.set_app_input_from_file(app_input_filename)
 
-testProbs = [0.01, 0.01]
-tracing_efficiencies = [0.0, 0.0]
-for graph_type in ['education_layered']:
+testProbs = [0.01, 0.01, None]
+tracing_efficiencies = [0.0, 0.5, 0.8]
+styles =  ['highest_degree', 'attribute_distrib', None]
+stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing'}
 # ['powerlaw_cluster', 'regular', 'geometric']:
-    plt.clf()
-    fig, axs = plt.subplots(len(testProbs), len(tracing_efficiencies), figsize=(15, 15))
-    
-    household_size_distribution = {'first':{20:0.1, 10:0.4, 5:0.4, 3:0.1 }, 'upper':{10:0.1, 5:0.2, 3:0.6, 1:0.1}}
-    number_activity_groups=500
-    activity_size_distribution={'first':{5:0.5, 10:0.5}, 'upper':{5:0.5, 10:0.5}}
-    
-    # plt.subplots_adjust(top=1.2)
-    for i in range(len(testProbs)):
-        for j in range(len(tracing_efficiencies)):
-            testProb=testProbs[i]
-            tracing_efficiency = tracing_efficiencies[j]
-            test_style='highest_degree'
-            test_prob={'first':0.1, 'upper':0.1}
-            
-            
-            simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
-            
-            # run the simulation
-            results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency, test_style=test_style, test_prob=test_prob)
-            
-            # print(results)
-            lines_of_interest=['S', 'E', 'I', 'A', 'R', 'T_S', 'T_P']
-            
-            for line in results:
-                print(results[line])
-                if line in lines_of_interest:
-                    axs[i, j].plot(range(len(results[line])), results[line], label=str(line))
-            # axs[i, j].legend()
-            axs[i, j].set_title('Testing every :' + str(1/testProb) + " days, \n Tracing efficiency: " + str(tracing_efficiency))
-            # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
-            
-            if args.output_filename:
-                json_str = json.dumps(results)
-            
-                with open(args.output_filename, "w") as f:
-                    f.write(json_str)
-            # 
-            # if args.graph_plot_filename:
-            #     simulation.graph.draw_graph(args.graph_plot_filename)
-            
-            if args.doubling_time_plot_filename:
-                simulation.model.plot_doubling_time(args.doubling_time_plot_filename)
-            
-            if not args.quiet:
-                print()
-                print(datetime.now() - start_time)
-    plt.savefig('model_output_' + graph_type+ '.png')
+plt.clf()
+fig, axs = plt.subplots(len(styles), len(tracing_efficiencies), figsize=(15, 15))
+axes = plt.gca()
+axes.set_ylim([0, 500])
+
+graph_type = 'education_layered'
+household_size_distribution = {'first':{20:0.1, 10:0.4, 5:0.4, 3:0.1 }, 'upper':{1:1.0}}
+number_activity_groups=500
+activity_size_distribution={'first':{25:0.5, 10:0.5}, 'upper':{5:0.5, 10:0.5}}
+for i in range(len(styles)):
+    for j in range(len(tracing_efficiencies)):
+        testProb= 0.05
+        tracing_efficiency = tracing_efficiencies[j]
+        test_style=styles[i]
+
+        test_distrib={'first':0.25, 'upper':0.75}
+        
+        
+        simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
+        
+        # run the simulation
+        results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency, test_style=test_style, test_prob=test_distrib)
+        results['A+I'] = result = [x + y for x, y in zip(results['A'], results['I'])]
+        
+        # print(results)
+        lines_of_interest=['A+I', 'T_S', 'T_P']
+        
+        for line in results:
+            print(results[line])
+            if line in lines_of_interest:
+                axs[i, j].plot(range(len(results[line])), results[line], label=str(line))
+        axs[i, j].legend()
+        # axs[i, j].set_ylim([0, 500])
+        axs[i, j].set_title('Testing strategy ' + str(stylesWords[test_style]) +  "\n Tracing efficiency: " + str(tracing_efficiency))
+        # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
+        
+        if args.output_filename:
+            json_str = json.dumps(results)
+        
+            with open(args.output_filename, "w") as f:
+                f.write(json_str)
+        # 
+        # if args.graph_plot_filename:
+        #     simulation.graph.draw_graph(args.graph_plot_filename)
+        
+        if args.doubling_time_plot_filename:
+            simulation.model.plot_doubling_time(args.doubling_time_plot_filename)
+        
+        if not args.quiet:
+            print()
+            print(datetime.now() - start_time)
+axes = plt.gca()
+axes.set_ylim([0,500])
+plt.savefig('model_output_' + graph_type+ '.png')

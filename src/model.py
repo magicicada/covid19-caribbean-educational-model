@@ -34,7 +34,7 @@ class Model:
         self.graph = graph
         self.console_log = console_log
 
-    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
+    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}):
         """Run the simulation"""
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
@@ -48,10 +48,15 @@ class Model:
         for vertex in infected:
             step_zero_states_dict[vertex] = "I"
 
+        nodes = self.graph.graph.nodes
+        num_tests = int(testProb*len(nodes))
+#             we need to generate a number of tests for each category
+        num_by_attr = {}
+        for cat in test_prob:
+            num_by_attr[cat] = test_prob[cat]*num_tests
+
         for time in range(self.graph.time_horizon):
             self.curr_time = time
-
-            nodes = self.graph.graph.nodes
 
             # use map for better performance
             # use list to force map evaluation
@@ -60,16 +65,26 @@ class Model:
             list(map(self._do_infection, nodes))
             
         
-            num_tests = testProb*len(nodes)
+
+            
             if test_style == 'highest_degree':
-                highest_degree_group = sorted(self.graph.degree, key=lambda x: x[1], reverse=True)[:num_tests]
-                self._do_strategic_testing_set(self.graph, highest_degree_group, test_prob_trace_contact=prob_trace_contact)
+                highest_degree_group = list(sorted(self.graph.graph.degree, key=lambda x: x[1], reverse=True))
+                i = 0
+                for node in highest_degree_group:
+                        if self.testable(node[0]):
+                            self._do_testing(node[0], testProb=1.0, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                            i=i+1
+                        if i >= num_tests:
+                            break
             elif test_style == 'attribute_distrib':
-                _do_strategic_testing_category(self.graph, attribute_for_test=attribute_for_test, test_prob=test_distrib, test_prob_trace_contact=prob_trace_contact)
+                # for k,v in nodes(data=True):
+                #     print(k,v)
+                self._do_strategic_testing_category(self.graph.graph, attribute_for_test, num_by_attr, test_prob_trace_contact=prob_trace_contact)
             else:
                 # theseNodes = choose 
                 for node in nodes:
-                 self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                    if self.testable(node):
+                        self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
             # list(map(self._do_testing, nodes))
 
             # self._remove_interactions()
@@ -254,7 +269,11 @@ class Model:
         """Remove the added interactions from the graph"""
 
         self.graph.remove_group_interaction_edges()
-
+    
+    def testable(self, node):
+        state = self.states_dict[self.curr_time][node]
+        return state == 'S' or state == 'E' or state == 'I' or state == 'A' or state =='R'
+    
     def _do_progression(self, node):
         """Progress the states based on the state transition dictionary
 
@@ -297,14 +316,28 @@ class Model:
                      self.graph.graph.neighbors(node)))
 
     
-    def _do_strategic_testing_set(self, graph, set_of_nodes, test_prob_trace_contact=0.0):
-        for node in set_of_nodes:
-            self._do_testing(node, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
+    # def _do_strategic_testing_set(self, graph, set_of_nodes, test_prob_trace_contact=0.0):
+    #     for node in set_of_nodes:
+    #         self._do_testing(node, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
     
-    def _do_strategic_testing_category(self, graph, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, test_prob_trace_contact=0.0):
-        for node in graph.nodes():
-            attribute = graph[node][attribute_for_test]
-            self._do_testing(node, testProb=test_prob[attribute], false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
+    def _do_strategic_testing_category(self, graph, attribute_for_test, test_prob, test_prob_trace_contact):
+#         we could pre-compute this to save time
+        guys_in_cats = {}
+        for cat in test_prob:
+            guys_in_cats[cat] = []
+        for k,v in graph.nodes(data=True):
+            attribute = v[attribute_for_test]
+            guys_in_cats[cat].append(k)
+        
+        for cat in guys_in_cats:
+            tests_avail = test_prob[cat]
+            i = 0
+            for k in guys_in_cats[cat]:
+                if self.testable(k):
+                    self._do_testing(k, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
+                    i = i+1
+                if i >= tests_avail:
+                    break
     
     def _do_testing(self, node, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
         """Do the testing and isolation
@@ -321,13 +354,27 @@ class Model:
         if state == "I" or state == "A":
             if thisLuck < testProb:
                 self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+                self._isolate_household(node)
         elif state == 'S':
             if thisLuck < testProb*false_positive:
                 self._isolate_self_and_neighbours(node, false_positive=True, prob_trace_contact=prob_trace_contact)
+                self._isolate_household(node)
         
             
             # list(map(partial(self._infect_neighbours, node),
             #          self.graph.graph.neighbors(node)))
+    
+    def _isolate_household(self, node):
+      # get the household
+      household = self.graph.graph.nodes[node]['household']
+      neighbours = self.graph.graph.neighbors(node)
+      for guy in neighbours:
+        if self.graph.graph.nodes[guy]['household'] == household:
+            state = self.states_dict[self.curr_time][guy]
+            if state == "I" or state == "A":
+                self.states_dict[self.curr_time + 1][guy] = "T_P"
+            elif state == 'S':
+                self.states_dict[self.curr_time + 1][guy] = "T_S"
             
     def _isolate_self_and_neighbours(self, node, false_positive=False, prob_trace_contact=0.0):
         """Isolation for node and neighbours

@@ -115,14 +115,18 @@ class Graph:
             self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.05)
             first_year_extras = 3
             upper_year_extras = 1
+            nodes = list(self.graph.nodes())
             
-            
-            first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
-            upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
+            # # self._add_extra_contacts(self.graph, nodes, 2)
+            # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
+            # # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
+            # # # 
+            # self._add_extra_contacts(self.graph, first_years, first_year_extras, extra_edge_weight=0.05)
+            # self._add_extra_contacts(self.graph, upper_years, upper_year_extras)
             # 
-            self._add_extra_contacts(self.graph, first_years, first_year_extras )
-            self._add_extra_contacts(self.graph, upper_years, upper_year_extras)
-            
+            # degrees = list(sorted(self.graph.degree, key=lambda x: x[1], reverse=True))
+            # for node,degree in degrees[:100]:
+            #     print(str(node) + "  " + self.graph.nodes[node]['year'] + "  " + str(degree))
             
         else:
             self._set_navigable_small_world_graph(
@@ -211,7 +215,7 @@ class Graph:
         return None
     
     
-    def _sub_household(self, num_people, graph, year_string, household_id, household_size_distribution, household_edge_weight=0.05):
+    def _sub_household(self, num_people, graph, year_string, household_id, household_size_distribution, household_edge_weight):
         people_thus_far = 0
         while people_thus_far < num_people:
             generate_household_size = self.choose_from_distrib(household_size_distribution)
@@ -242,7 +246,7 @@ class Graph:
         
         # upper years
         num_upper_year = num_people - num_first_year
-        household_id = self._sub_household(num_upper_year, graph, 'upper', household_id, household_size_distribution['upper'], household_edge_weight=household_edge_weight)
+        household_id = self._sub_household(num_upper_year, graph, 'upper', household_id, household_size_distribution['upper'], household_edge_weight=0.0)
         
         # print('\n\n people thus far ' + str(people_thus_far))
         
