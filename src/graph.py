@@ -117,7 +117,7 @@ class Graph:
             upper_year_extras = 1
             nodes = list(self.graph.nodes())
             
-            # # self._add_extra_contacts(self.graph, nodes, 2)
+            self._add_extra_contacts(self.graph, nodes, 0.001)
             # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
             # # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
             # # # 
@@ -234,14 +234,16 @@ class Graph:
         return household_id
     
     def _set_household_groupings(self, age_structure, household_size_distribution, household_edge_weight=0.05):
-        print(household_size_distribution)
+        # print(household_size_distribution)
         num_people = sum(age_structure.values())
         people_thus_far = 0
         household_id = 0
         graph = nx.Graph()
         
         # first years
-        num_first_year = math.floor(num_people/4)
+        # 
+        num_first_year =  math.floor(num_people/4)
+        print('number of first-years is ' + str(num_first_year))
         household_id = self._sub_household(num_first_year, graph, 'first', household_id, household_size_distribution['first'], household_edge_weight=household_edge_weight)
         
         # upper years
@@ -255,21 +257,27 @@ class Graph:
     
     
     def _add_secondary_groupings(self, number_activity_groups, activity_size_distribution, activity_edge_weight = 0.01):
-        
-        activity_size_distribution = activity_size_distribution['first']
-        
-        graph = self.graph
-        for i in range(number_activity_groups):
-            group_size = self.choose_from_distrib(activity_size_distribution)
-            group_members = list(random.sample(graph.nodes(), group_size))
-            for i in range(len(group_members)):
-                for j in range(i+1, len(group_members)):
-                    if (group_members[i], group_members[j]) not in graph.edges():
-                        graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
+#         note: hard-coded to year classes just now
+        for cat in activity_size_distribution:
+            activity_size_distribution_this = activity_size_distribution[cat]
+            graph = self.graph
+            these_nodes = []
+            for k,v in graph.nodes(data=True):
+                if v['year'] == cat:
+                    these_nodes.append(k)
+            for i in range(number_activity_groups):
+                group_size = self.choose_from_distrib(activity_size_distribution_this)
+                group_members = list(random.sample(these_nodes, group_size))
+                for i in range(len(group_members)):
+                    for j in range(i+1, len(group_members)):
+                        if (group_members[i], group_members[j]) not in graph.edges():
+                            graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
+                        
     
-    def _add_extra_contacts(self, graph, vertex_set, m, extra_edge_weight=0.01):
+    def _add_extra_contacts(self, graph, vertex_set, p, extra_edge_weight=0.01):
         n = len(vertex_set)
-        pref_att_graph = nx.barabasi_albert_graph(n, m)
+#         TODO - change this to uniformly at random, ER style
+        pref_att_graph = nx.fast_gnp_random_graph(n, p)
         nodes_list = list(pref_att_graph.nodes())
         for i in range(len(nodes_list)):
             for j in range(i+1, len(nodes_list)):

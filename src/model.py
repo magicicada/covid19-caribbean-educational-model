@@ -34,7 +34,7 @@ class Model:
         self.graph = graph
         self.console_log = console_log
 
-    def basic_simulation(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}):
+    def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}):
         """Run the simulation"""
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
@@ -80,11 +80,25 @@ class Model:
                 # for k,v in nodes(data=True):
                 #     print(k,v)
                 self._do_strategic_testing_category(self.graph.graph, attribute_for_test, num_by_attr, test_prob_trace_contact=prob_trace_contact)
+            elif test_style == 'alternate_null':
+                random_nodes = []
+                for node in self.graph.graph.nodes():
+                    random_nodes.append(node)
+                random.shuffle(random_nodes)
+                i=0
+                for node in random_nodes:
+                        if self.testable(node):
+                            self._do_testing(node, testProb=1.0, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                            i=i+1
+                        if i >= num_tests:
+                            break
             else:
-                # theseNodes = choose 
+                # theseNodes = choose
+                num_tested = 0
                 for node in nodes:
                     if self.testable(node):
-                        self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                        if(self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)):
+                            num_tested = num_tested+1
             # list(map(self._do_testing, nodes))
 
             # self._remove_interactions()
@@ -327,19 +341,23 @@ class Model:
             guys_in_cats[cat] = []
         for k,v in graph.nodes(data=True):
             attribute = v[attribute_for_test]
-            guys_in_cats[cat].append(k)
-        
+            guys_in_cats[attribute].append(k)
+
         for cat in guys_in_cats:
             tests_avail = test_prob[cat]
+            # print('now testing category ' + str(cat) + ' with ' + str(tests_avail) + ' tests')
+            random.shuffle(guys_in_cats[cat])
+            
+            # print('for cat ' + str(cat) + ' list of guys to test length is ' + str(len(guys_in_cats[cat])))
             i = 0
             for k in guys_in_cats[cat]:
                 if self.testable(k):
-                    self._do_testing(k, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
-                    i = i+1
+                    if self._do_testing(k, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact):
+                       i = i+1
                 if i >= tests_avail:
                     break
     
-    def _do_testing(self, node, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0):
+    def _do_testing(self, node, testProb, false_positive, prob_trace_contact):
         """Do the testing and isolation
 
         Parameters
@@ -347,18 +365,20 @@ class Model:
         node : int
             Name of node in the graph"""
         state = self.states_dict[self.curr_time][node]
-        
+        did_test = False
         # get test result
         thisLuck = random.random()
-
-        if state == "I" or state == "A":
-            if thisLuck < testProb:
-                self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
-                self._isolate_household(node)
-        elif state == 'S':
-            if thisLuck < testProb*false_positive:
-                self._isolate_self_and_neighbours(node, false_positive=True, prob_trace_contact=prob_trace_contact)
-                self._isolate_household(node)
+        if thisLuck <= testProb:
+            did_test = True
+            if state == "I" or state == "A":
+                    self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+                    self._isolate_household(node)
+            elif state == 'S':
+                thisLuck = random.random()
+                if thisLuck < false_positive:
+                    self._isolate_self_and_neighbours(node, false_positive=True, prob_trace_contact=prob_trace_contact)
+                    self._isolate_household(node)
+        return did_test
         
             
             # list(map(partial(self._infect_neighbours, node),
