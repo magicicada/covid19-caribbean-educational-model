@@ -111,15 +111,17 @@ class Graph:
         elif graph_type == 'powerlaw_cluster':
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
-            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
-            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.05)
+            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.04)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.03)
             first_year_extras = 3
-            upper_year_extras = 1
+            upper_year_extras = 20
             nodes = list(self.graph.nodes())
+            
+            # self._add_extra_contacts(self.graph, nodes, 5)
             
             self._add_extra_contacts(self.graph, nodes, 0.001)
             # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
-            # # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
+            # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
             # # # 
             # self._add_extra_contacts(self.graph, first_years, first_year_extras, extra_edge_weight=0.05)
             # self._add_extra_contacts(self.graph, upper_years, upper_year_extras)
@@ -277,6 +279,7 @@ class Graph:
     def _add_extra_contacts(self, graph, vertex_set, p, extra_edge_weight=0.01):
         n = len(vertex_set)
 #         TODO - change this to uniformly at random, ER style
+        # pref_att_graph = nx.barabasi_albert_graph(n, p)
         pref_att_graph = nx.fast_gnp_random_graph(n, p)
         nodes_list = list(pref_att_graph.nodes())
         for i in range(len(nodes_list)):

@@ -92,7 +92,7 @@ class Model:
                             i=i+1
                         if i >= num_tests:
                             break
-            else:
+            elif test_style == None:
                 # theseNodes = choose
                 num_tested = 0
                 for node in nodes:

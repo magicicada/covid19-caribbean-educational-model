@@ -80,13 +80,15 @@ simulation.set_app_input_from_file(app_input_filename)
 
 testProbs = [0.01, 0.01, None]
 tracing_efficiencies = [0.0, 0.5, 0.8]
-styles =  ['highest_degree', 'attribute_distrib', None]
-stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing', 'alternate_null':'alternative uniform random'}
+styles =  ['highest_degree', 'attribute_distrib', None, 'No_test']
+stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing',
+               'alternate_null':'alternative uniform random', 'No_test': 'No testing'}
 # ['powerlaw_cluster', 'regular', 'geometric']:
 plt.clf()
 fig, axs = plt.subplots(len(styles), len(tracing_efficiencies), figsize=(15, 15))
 axes = plt.gca()
-axes.set_ylim([0, 1200])
+max_y = 5000
+axes.set_ylim([0, max_y])
 
 graph_type = 'education_layered'
 household_size_distribution = {'first':{10:0.5, 5:0.5}, 'upper':{4:0.5, 2:0.5}}
@@ -94,7 +96,7 @@ number_activity_groups=500
 activity_size_distribution={'first':{25:0.5, 10:0.5}, 'upper':{10:0.5, 5:0.5}}
 for i in range(len(styles)):
     for j in range(len(tracing_efficiencies)):
-        testProb= 0.05
+        testProb= 0.1 
         tracing_efficiency = tracing_efficiencies[j]
         test_style=styles[i]
 
@@ -102,22 +104,23 @@ for i in range(len(styles)):
         
         
         simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
-        
+        total = len(simulation.graph.graph.nodes())
         # run the simulation
         results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency,
                                           test_style=test_style, test_prob=test_distrib)
         results['A+I'] =  [x + y for x, y in zip(results['A'], results['I'])]
         results['A+I+T_P'] = [x + y for x, y in zip(results['A+I'], results['T_P'])]
+        results['S+T_S'] = [x + y for x, y in zip(results['S'], results['T_S'])]
+        results['Cum_Cases'] = [total-x for x in results['S+T_S']]
         # print(results)
-        lines_of_interest=['A+I', 'T_S', 'T_P', 'A+I+T_P']
-        
-        for line in results:
-            print(results[line])
-            if line in lines_of_interest:
-                axs[i, j].set_ylim([0, 1200])
+        # lines_of_interest=['R', 'A+I', 'T_S', 'T_P', 'A+I+T_P']
+        lines_of_interest = ['Cum_Cases']
+        for line  in lines_of_interest:
+                axs[i, j].set_ylim([0, max_y])
                 axs[i, j].plot(range(len(results[line])), results[line], label=str(line))
+                print(line + str(results[line]))
         axs[i, j].legend()
-        axs[i, j].set_ylim([0, 1200])
+        axs[i, j].set_ylim([0, max_y])
         axs[i, j].set_title('Testing strategy ' + str(stylesWords[test_style]) +  "\n Tracing efficiency: " + str(tracing_efficiency))
         # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
         
@@ -137,5 +140,5 @@ for i in range(len(styles)):
             print()
             print(datetime.now() - start_time)
 axes = plt.gca()
-axes.set_ylim([0,1200])
-plt.savefig('model_output_' + graph_type+ '.png')
+axes.set_ylim([0,max_y])
+plt.savefig('model_output_few_extras_more_balanced_edgeweights_' + graph_type+ '.png')
