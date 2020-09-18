@@ -97,7 +97,8 @@ tracing_efficiencies = [0.0, 0.5, 0.8]
 # - 'attribute_distrib' allocates tests to testable first-year vs testable upper-year according to a distribution spec given as a dictionary
 # - None: does uniformly random testing of testable individuals
 # - 'No_test' does no testing at all
-styles =  ['highest_degree', 'attribute_distrib', None, 'No_test']
+# styles =  ['highest_degree', 'attribute_distrib', None, 'No_test']
+styles=['No_test', 'No_test']
 # The stylesWords are used as labels in figure titles. 
 stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing',
                'alternate_null':'alternative uniform random', 'No_test': 'No testing'}
@@ -122,7 +123,7 @@ number_activity_groups=500
 activity_size_distribution={'first':{25:0.5, 10:0.5}, 'upper':{10:0.5, 5:0.5}}
 
 #  setting test capacity: 0.1 is enough to test 10% of the population every day 
-test_prob = 0.1
+testProb = 0.1
 
 # We're going to experiment for each testing style, for each tracing efficiency
 for i in range(len(styles)):
@@ -137,8 +138,8 @@ for i in range(len(styles)):
         test_distrib={'first':1.0, 'upper':0.0}
         
         
-        # setting up the graph for simulation         
-        simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
+        # setting up the graph for simulation
+        simulation.create_graph(graph_type, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
         total = len(simulation.graph.graph.nodes())
         # run the simulation
         results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency,
@@ -149,7 +150,8 @@ for i in range(len(styles)):
         results['A+I'] =  [x + y for x, y in zip(results['A'], results['I'])]
         results['A+I+T_P'] = [x + y for x, y in zip(results['A+I'], results['T_P'])]
         results['S+T_S'] = [x + y for x, y in zip(results['S'], results['T_S'])]
-        results['Cum_Cases'] = [total-x for x in results['S+T_S']]
+        results['S+T_S+E'] = [x + y for x, y in zip(results['S+T_S'], results['E'])]
+        results['Cum_Cases'] = [total-x for x in results['S+T_S+E']]
         # print(results)
         
         #  lines_of_interest will set which lines to plot in the output figures
