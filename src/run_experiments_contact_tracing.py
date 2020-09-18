@@ -97,8 +97,8 @@ tracing_efficiencies = [0.0, 0.5, 0.8]
 # - 'attribute_distrib' allocates tests to testable first-year vs testable upper-year according to a distribution spec given as a dictionary
 # - None: does uniformly random testing of testable individuals
 # - 'No_test' does no testing at all
-# styles =  ['highest_degree', 'attribute_distrib', None, 'No_test']
-styles=['No_test', 'No_test']
+styles =  ['highest_degree', 'attribute_distrib', None, 'No_test']
+
 # The stylesWords are used as labels in figure titles. 
 stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing',
                'alternate_null':'alternative uniform random', 'No_test': 'No testing'}
