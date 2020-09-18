@@ -1,6 +1,7 @@
 # Python caches
 __pycache__
 .pytest_cache
+*.pyc
 
 # Images
 *.png
