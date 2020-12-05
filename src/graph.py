@@ -111,15 +111,15 @@ class Graph:
         elif graph_type == 'powerlaw_cluster':
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
-            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.04)
-            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.03)
+            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.02)
             first_year_extras = 3
             upper_year_extras = 20
             nodes = list(self.graph.nodes())
             
-            # self._add_extra_contacts(self.graph, nodes, 5)
+            self._add_extra_contacts(self.graph, nodes, 5)
             
-            self._add_extra_contacts(self.graph, nodes, 0.001)
+            # self._add_extra_contacts(self.graph, nodes, 0.001)
             # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
             # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
             # # # 
@@ -276,17 +276,23 @@ class Graph:
                             graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
                         
     
-    def _add_extra_contacts(self, graph, vertex_set, p, extra_edge_weight=0.01):
+    def _add_extra_contacts(self, graph, vertex_set, num_extras_per, extra_edge_weight=0.01):
         n = len(vertex_set)
+        total = n*num_extras_per
+        for _ in range(total):
+            i = random.randint(0,n-1)
+            j  = random.randint(0,n-1)
+            graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
+            
 #         TODO - change this to uniformly at random, ER style
         # pref_att_graph = nx.barabasi_albert_graph(n, p)
-        pref_att_graph = nx.fast_gnp_random_graph(n, p)
-        nodes_list = list(pref_att_graph.nodes())
-        for i in range(len(nodes_list)):
-            for j in range(i+1, len(nodes_list)):
-                if (i, j) in pref_att_graph.edges() and (vertex_set[i], vertex_set[i]) not in graph.edges():
-                    graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
-        
+        # pref_att_graph = nx.fast_gnp_random_graph(n, p)
+        # nodes_list = list(pref_att_graph.nodes())
+        # for i in range(len(nodes_list)):
+        #     for j in range(i+1, len(nodes_list)):
+        #         if (i, j) in pref_att_graph.edges() and (vertex_set[i], vertex_set[i]) not in graph.edges():
+        #             graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
+        # 
         
     
     

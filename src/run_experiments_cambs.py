@@ -79,7 +79,7 @@ simulation = Simulation(infection_data_filename,
 simulation.set_app_input_from_file(app_input_filename)
 
 testProbs = [0.01, 0.01, None]
-tracing_efficiencies = [0.0, 0.5]
+tracing_efficiencies = [0.0]
 styles =  [ 'No_test', 'highest_degree', 'attribute_distrib', None]
 stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing',
                'alternate_null':'alternative uniform random', 'No_test': 'No testing'}
@@ -141,4 +141,4 @@ for i in range(len(styles)):
             print(datetime.now() - start_time)
 axes = plt.gca()
 axes.set_ylim([0,max_y])
-plt.savefig('forIDP_' + graph_type+ '.png')
+plt.savefig('forCambridge_' + graph_type+ '.png')

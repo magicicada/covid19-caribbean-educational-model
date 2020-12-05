@@ -2,6 +2,8 @@ import random
 from collections import Counter
 from functools import partial
 import matplotlib.pyplot as plt
+import networkx as nx
+from time import gmtime, strftime 
 
 
 class Model:
@@ -32,12 +34,14 @@ class Model:
     def __init__(self, params, graph, console_log=False):
         self.params = params
         self.graph = graph
+        self.infection_tree = nx.DiGraph()
         self.console_log = console_log
 
     def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}):
         """Run the simulation"""
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
+        self.infection_tree = nx.DiGraph()
 
         # choose a random set of initially infected
         infected = random.sample(list(self.graph.graph),
@@ -64,7 +68,8 @@ class Model:
             list(map(self._do_progression, nodes))
             list(map(self._do_infection, nodes))
             
-        
+            for node in nodes:
+                    self._do_testing(node, 0, 0, prob_trace_contact)
 
             
             if test_style == 'highest_degree':
@@ -99,12 +104,20 @@ class Model:
                     if self.testable(node):
                         if(self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)):
                             num_tested = num_tested+1
+            # else:
+            #     for node in nodes:
+            #         self._do_testing(node, 0, 0, prob_trace_contact)
             # list(map(self._do_testing, nodes))
 
             # self._remove_interactions()
 
         if self.console_log:
             self.print_state_counts(self.graph.time_horizon)
+        # plt.clf()
+        # degrees = [self.infection_tree.out_degree(n) for n in self.infection_tree.nodes()]
+        # plt.hist(degrees)
+        # # nx.draw_networkx(self.infection_tree)
+        # plt.savefig('tree_degree_distrib_' + str(strftime("%Y-%m-%d%H:%M:%S", gmtime())) + '.pdf')
 
     def get_results(self):
         """Returns dictionary with results of the simulation
@@ -335,6 +348,11 @@ class Model:
     #         self._do_testing(node, testProb=1.0, false_positive=0.0, prob_trace_contact=test_prob_trace_contact)
     
     def _do_strategic_testing_category(self, graph, attribute_for_test, test_prob, test_prob_trace_contact):
+        
+        for node in graph.nodes():
+            self._do_testing(node, 0, 0, test_prob_trace_contact)
+                
+        
 #         we could pre-compute this to save time
         guys_in_cats = {}
         for cat in test_prob:
@@ -367,7 +385,15 @@ class Model:
         state = self.states_dict[self.curr_time][node]
         did_test = False
         # get test result
+        
         thisLuck = random.random()
+        
+        if state == "I":
+            self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+            self._isolate_household(node)
+            return did_test
+                
+        
         if thisLuck <= testProb:
             did_test = True
             if state == "I" or state == "A":
@@ -435,6 +461,7 @@ class Model:
             luck = random.random()
             if luck <= infection_prob:
                 self.states_dict[self.curr_time + 1][neighbour] = "E"
+                self.infection_tree.add_edge(node, neighbour)
 
     def _get_state_counts(self, time):
         """Return the number of nodes in given state at given time
