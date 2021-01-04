@@ -8,6 +8,21 @@ from src.model import Model
 from src.params import Params
 
 
+def get_percentile(list_of_lists, what_percent):
+#         assume all lists in the list of lists are of the same length
+        overall_perc = []
+        length = len(list_of_lists[0])
+        for position in range(length):
+            this_pos = []
+            for this_list in list_of_lists:
+                this_pos.append(this_list[position])
+            this_pos = sorted(this_pos)
+            perc_pos = int(round(what_percent*(len(this_pos)-1), 0))
+            # print(perc_pos)
+            overall_perc.append(this_pos[perc_pos])
+        return overall_perc
+        
+
 class Simulation:
     """Wrapper class for managing parameters and graph and running simulations
 
@@ -143,7 +158,7 @@ class Simulation:
 
         self.graph = loaded_graph
 
-    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
+    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom =1):
         """Run a single simulation
 
         Returns
@@ -158,13 +173,15 @@ class Simulation:
             else:
                 self.create_graph()
 
-        model = Model(self.params, self.graph, self.verbose)
+        model = Model(self.params, self.graph,  self.verbose)
 
-        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob)
+        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom)
 
         return model.get_results()
-
-    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}):
+    
+    
+    
+    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom = 1):
         """Run multiple simulations and return an averaged result
 
         Parameters
@@ -180,13 +197,28 @@ class Simulation:
         """
 
         # run simulations and collect results
-        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob) for _ in range(n)]
-
+        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom) for _ in range(n)]
+        
+        
+        all_states = list(Model.STATES.keys()) + ['cum_cases']
+        
         # get averaged results
         averaged = {}
-        for state in Model.STATES:
+        for state in all_states:
             state_lists = [state_dict[state] for state_dict in all_results]
             averaged[state] = [int(np.round(np.mean(item))) for item in zip(*state_lists)]
+            
+        # TODO: working here     
+        top = {}
+        bottom = {}
+        for state in all_states:
+            state_lists = sorted([state_dict[state] for state_dict in all_results])
+            # print(state)
+            # print(state_lists)
+            length = len(state_lists)
+            top[state] =  get_percentile(state_lists, 0.975)
+            bottom[state] = get_percentile(state_lists, 0.025)
+        
 
         # ensure number of people in each state is equal to
         # the population size at each timestep, otherwise
@@ -198,4 +230,4 @@ class Simulation:
                 biggest_state = max(states_at_timestep, key=states_at_timestep.get)
                 averaged[biggest_state][timestep] += self.params.population_size - total
 
-        return averaged
+        return (averaged, top, bottom)

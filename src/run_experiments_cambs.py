@@ -79,25 +79,32 @@ simulation = Simulation(infection_data_filename,
 simulation.set_app_input_from_file(app_input_filename)
 
 testProbs = [0.01, 0.01, None]
-tracing_efficiencies = [0.0]
-styles =  [ 'No_test', 'highest_degree', 'attribute_distrib', None]
+tracing_efficiencies = [0.0, 0.0]
+styles = ['household_schedule',None, 'No_test']
+# [ 'No_test', 'highest_degree', 'attribute_distrib', None]
 stylesWords = {'highest_degree':'highest degree', 'attribute_distrib':'testing only first-years', None: 'uniformly random testing',
-               'alternate_null':'alternative uniform random', 'No_test': 'No testing'}
+               'alternate_null':'alternative uniform random', 'No_test': 'No testing', 'household_schedule':'Household stratified'}
 # ['powerlaw_cluster', 'regular', 'geometric']:
 plt.clf()
-fig, axs = plt.subplots(len(styles), len(tracing_efficiencies), figsize=(20, 20))
+# fig, axs = plt.subplots(len(styles), len(tracing_efficiencies), figsize=(20, 20))
 axes = plt.gca()
-max_y = 5000
+max_y = 4000
 axes.set_ylim([0, max_y])
 
 graph_type = 'education_layered'
-household_size_distribution = {'first':{10:0.5, 5:0.5}, 'upper':{4:0.5, 2:0.5}}
+household_size_distribution = {'first':{7:1.0}, 'upper':{7:1.0}}
 number_activity_groups= 2000
-activity_size_distribution={'first':{25:0.5, 10:0.5}, 'upper':{10:0.5, 5:0.5}}
+activity_size_distribution={'first':{10:0.5, 5:0.5}, 'upper':{10:0.5, 5:0.5}}
+colours = {'household_schedule': 'blue', None: 'orange', 'No_test':'red'}
 for i in range(len(styles)):
-    for j in range(len(tracing_efficiencies)):
-        testProb= 0.1 
-        tracing_efficiency = tracing_efficiencies[j]
+    # for j in range(len(tracing_efficiencies)):
+    if styles[i] == 'household_schedule':
+        denoms = [1, 2]
+    else:
+        denoms = [1]
+    for denom in denoms:
+        testProb= 0.07 
+        tracing_efficiency = 0.2
         test_style=styles[i]
 
         test_distrib={'first':1.0, 'upper':0.0}
@@ -106,22 +113,47 @@ for i in range(len(styles)):
         simulation.create_graph(graph_type, edges_per_vert=10, household_size_distribution=household_size_distribution, number_activity_groups=number_activity_groups, activity_size_distribution=activity_size_distribution)
         total = len(simulation.graph.graph.nodes())
         # run the simulation
-        results = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency,
-                                          test_style=test_style, test_prob=test_distrib)
+        (results, top, bottom) = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency,
+                                          test_style=test_style, test_prob=test_distrib, schedule_denom = denom)
         results['A+I'] =  [x + y for x, y in zip(results['A'], results['I'])]
         results['A+I+T_P'] = [x + y for x, y in zip(results['A+I'], results['T_P'])]
         results['S+T_S'] = [x + y for x, y in zip(results['S'], results['T_S'])]
+        top['S+T_S'] = [x + y for x, y in zip(top['S'], top['T_S'])]
         results['Cum_Cases'] = [total-x for x in results['S+T_S']]
+        top['Cum_Cases'] = [total-x for x in top['S+T_S']]
         # print(results)
-        lines_of_interest=['R',  'T_S',  'A+I+T_P']
-        # lines_of_interest = ['Cum_Cases']
+        # lines_of_interest=['R',  'T_S',  'A+I+T_P']
+        lines_of_interest = ['cum_cases']
+        line_name = ''
+        test_style_string = ''
+       
+        if test_style == 'household_schedule':
+            if denom == 1:
+                test_style_string = 'Weekly household testing'
+                test_style_colour = 'blue'
+            if denom == 2:
+                test_style_string = 'Weekly half-household testing'
+                test_style_colour = 'orange'
+        elif test_style == 'No_test':
+            test_style_string = 'No asympt testing'
+            test_style_colour = 'red'
+        elif test_style == None:
+            test_style_string = 'Random asympt testing every two weeks'
+            test_style_colour = 'grey'
+        
         for line  in lines_of_interest:
-                axs[i, j].set_ylim([0, max_y])
-                axs[i, j].plot(range(len(results[line])), results[line], label=str(line))
+                axes.set_ylim([0, max_y])
+                axes.plot(range(len(results[line])), results[line], label=test_style_string, color = test_style_colour)
+                axes.fill_between(range(len(top[line])), top[line], y2 = bottom[line], color = test_style_colour, alpha = 0.4)
+                # axes.plot(range(len(top[line])), top[line],  color = colours[test_style], alpha =0.4)
+                # axes.plot(range(len(bottom[line])), bottom[line], color = colours[test_style], alpha = 0.4)
                 print(line + str(results[line]))
-        axs[i, j].legend()
-        axs[i, j].set_ylim([0, max_y])
-        axs[i, j].set_title('Testing strategy ' + str(stylesWords[test_style]) +  "\n Tracing efficiency: " + str(tracing_efficiency))
+                print(line + str(top[line]))
+        axes.legend()
+        axes.set_ylim([0, max_y])
+        plt.xlabel('Day')
+        plt.ylabel('Number of cumulative cases')
+        axes.set_title('Cumulative cases over time under differing testing strategies')
         # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
         
         if args.output_filename:

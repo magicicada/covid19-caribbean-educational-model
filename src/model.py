@@ -6,6 +6,57 @@ import networkx as nx
 from time import gmtime, strftime 
 
 
+def generate_household_testing_schedule(denom_test_week, proportion_consenting, graph):
+    schedule = {}
+    week_sched = {}
+    for i in range(denom_test_week):
+        week_sched[i] = []
+    
+    house_lists = {}
+    house_lists_consented = {}
+    for guy in graph:
+        house = graph.nodes[guy]['household']
+        if house not in house_lists:
+            house_lists[house] = [guy]
+        else:
+            house_lists[house].append(guy)
+    for house in house_lists:
+        consent_total = int(round(len(house_lists[house])*proportion_consenting, 0))
+        for i in range(consent_total):
+            week_sched[i%denom_test_week].append(house_lists[house][i])
+    return week_sched
+
+def _make_daily_schedule(schedule, graph, period_length=7):
+  # daily_sched will be a dict of dicts, indexed like daily_sched[week][day]
+  daily_sched = {}
+
+
+  households = []
+  for guy in graph:
+    house = graph.nodes[guy]['household']
+    households.append(house)
+  households = list(set(households))
+
+  # each household gets a day of the week at random
+  house_to_day = {}
+  for house in households:
+    house_to_day[house] = random.randrange(period_length)
+
+  # each person gets a (week, day).  The day comes from the household
+  # the week comes from the schedule
+  for week in schedule:
+    if week not in daily_sched:
+      daily_sched[week] = {}
+    these_guys = schedule[week]
+    for guy in these_guys:
+      house = graph.nodes[guy]['household']
+      this_day = house_to_day[house]
+      this_week = week
+      if this_day not in daily_sched[week]:
+        daily_sched[week][this_day] = []
+      daily_sched[week][this_day].append(guy)     
+  return daily_sched
+
 class Model:
     """Base model for simulating COVID-19 spread in Jamaica
 
@@ -23,7 +74,8 @@ class Model:
 
     STATES = {"S": "Susceptible",
               "E": "Exposed",
-              "A": "Asymptomatic",
+              "A": "Presymptomatic",
+              "A_T": 'Asymptomatic',
               "I": "Symptomatic",
               "H": "Hospitalised",
               "D": "Dead",
@@ -36,9 +88,19 @@ class Model:
         self.graph = graph
         self.infection_tree = nx.DiGraph()
         self.console_log = console_log
+        
 
-    def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}):
+
+    def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}, schedule_denom = 1):
         """Run the simulation"""
+        
+        if test_style == 'household_schedule':
+#             generate a household schedule - right now hackily hard-coded
+           denom = schedule_denom
+           proportion_consenting = 1.0
+           res = generate_household_testing_schedule(denom, proportion_consenting, self.graph.graph)
+           schedule = _make_daily_schedule(res, self.graph.graph, period_length=7)
+
 
         self.params.behaviours_dict = self.params._convert_behaviours_to_dict()
         self.infection_tree = nx.DiGraph()
@@ -50,9 +112,15 @@ class Model:
         self._make_states_dict()
         step_zero_states_dict = self.states_dict[0]
         for vertex in infected:
-            step_zero_states_dict[vertex] = "I"
+            step_zero_states_dict[vertex] = "A"
 
         nodes = self.graph.graph.nodes
+        will_have_sympts = {}
+        thresh_for_sympt = 0.4
+        for node in nodes:
+            will_have_sympts[node] = random.random() < thresh_for_sympt
+                
+        
         num_tests = int(testProb*len(nodes))
 #             we need to generate a number of tests for each category
         num_by_attr = {}
@@ -68,10 +136,12 @@ class Model:
             list(map(self._do_progression, nodes))
             list(map(self._do_infection, nodes))
             
-            for node in nodes:
-                    self._do_testing(node, 0, 0, prob_trace_contact)
-
-            
+            # for node in nodes:
+            #         self._do_testing(node, 0, 0, prob_trace_contact)
+            for node in self.graph.graph.nodes():
+                if will_have_sympts[node]:
+                    self._do_symptomatic_testing( node, false_positive, prob_trace_contact)
+                
             if test_style == 'highest_degree':
                 highest_degree_group = list(sorted(self.graph.graph.degree, key=lambda x: x[1], reverse=True))
                 i = 0
@@ -81,6 +151,28 @@ class Model:
                             i=i+1
                         if i >= num_tests:
                             break
+            elif test_style == 'household_schedule':
+#                 TODO - implement this
+                  # get the schedule
+                  period = 7
+                  # schedule = [period][day]
+                  denom = max(schedule.keys()) + 1
+                  which_day = time%period
+                  which_period = int(time/period)%denom
+                  guys_for_test = schedule[which_period][which_day]
+                  # for period in schedule:
+                  #   for day in schedule[period]:
+                  #       print(str(period) + "  " + str(day) + " ")
+                  #       print(str(schedule[period][day]))
+                  # print(guys_for_test)
+                  # print('Household testing ' + str(len(guys_for_test)) + " nodes")
+                  i = 0
+                  for node in guys_for_test:
+                    if self.testable(node):
+                       self._do_testing(node, testProb=1.0, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                       i = i+1
+                  # print('Household actual tested ' + str(i) + " nodes")
+
             elif test_style == 'attribute_distrib':
                 # for k,v in nodes(data=True):
                 #     print(k,v)
@@ -99,11 +191,12 @@ class Model:
                             break
             elif test_style == None:
                 # theseNodes = choose
-                num_tested = 0
+                # print('I am doing no testing')
+                # num_tested = 0
                 for node in nodes:
-                    if self.testable(node):
-                        if(self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)):
-                            num_tested = num_tested+1
+                     if self.testable(node):
+                         self._do_testing(node, testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
+                #             num_tested = num_tested+1
             # else:
             #     for node in nodes:
             #         self._do_testing(node, 0, 0, prob_trace_contact)
@@ -129,14 +222,23 @@ class Model:
         dict
             Dictionary in form {state: [number of nodes in given state]}
         """
+        non_case = ['S', 'E', 'T_S']
 
         output_dict = {key: [] for key in Model.STATES.keys()}
+        output_dict['cum_cases']= []
 
         for step in range(1, self.graph.time_horizon + 1, 1):
             counts = self._get_state_counts(step)
+            
+            cum_case_count = 0
+                      
             for state in output_dict:
-                output_dict[state].append(counts[state])
-
+                if state not in non_case:
+                  cum_case_count = cum_case_count + counts[state]
+                if state != 'cum_cases':
+                  output_dict[state].append(counts[state])
+            # print('appending ' + str(cum_case_count) + ' cumulative counts')
+            output_dict['cum_cases'].append(cum_case_count)
         return output_dict
 
     def print_state_counts(self, time, letter_only=False):
@@ -338,9 +440,16 @@ class Model:
 
         state = self.states_dict[self.curr_time][node]
 
-        if state == "I" or state == "A":
+        if state == "I" or state == "A" or state == "A_T":
             list(map(partial(self._infect_neighbours, node),
                      self.graph.graph.neighbors(node)))
+            
+         # TODO: add continued household infection after isolation
+        if state == "T_P":
+          # do only household infection
+          list(map(partial(self._infect_household_only, node),
+                     self.graph.graph.neighbors(node)))
+          
 
     
     # def _do_strategic_testing_set(self, graph, set_of_nodes, test_prob_trace_contact=0.0):
@@ -375,6 +484,16 @@ class Model:
                 if i >= tests_avail:
                     break
     
+    def _do_symptomatic_testing(self, node, false_positive, prob_trace_contact):
+        state = self.states_dict[self.curr_time][node]
+        did_test = False
+        # get test result
+        if state == "I":
+             self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+             self._isolate_household(node)
+             return did_test
+        
+    
     def _do_testing(self, node, testProb, false_positive, prob_trace_contact):
         """Do the testing and isolation
 
@@ -388,15 +507,15 @@ class Model:
         
         thisLuck = random.random()
         
-        if state == "I":
-            self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
-            self._isolate_household(node)
-            return did_test
+        # if state == "I":
+        #     self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
+        #     self._isolate_household(node)
+        #     return did_test
                 
-        
+        # print(testProb)
         if thisLuck <= testProb:
             did_test = True
-            if state == "I" or state == "A":
+            if state == "I" or state == "A" or state == "A_T":
                     self._isolate_self_and_neighbours(node, prob_trace_contact=prob_trace_contact)
                     self._isolate_household(node)
             elif state == 'S':
@@ -407,8 +526,29 @@ class Model:
         return did_test
         
             
-            # list(map(partial(self._infect_neighbours, node),
-            #          self.graph.graph.neighbors(node)))
+#             # list(map(partial(self._infect_neighbours, node),
+#             #          self.graph.graph.neighbors(node)))
+# #     TODO - WORKING PLACE
+#     def generate_household_testing_schedule(denom_test_week, proportion_consenting, graph):
+#         schedule = {}
+#         week_sched = {}
+#         for i in range(denom_test_week):
+#             week_sched[i] = []
+#         
+#         house_lists = {}
+#         house_lists_consented = {}
+#         for guy in graph:
+#             house = graph.nodes[guy]['household']
+#             if house not in house_lists:
+#                 house_lists[house] = [guy]
+#             else:
+#                 house_lists[house].append(guy)
+#         for house in house_lists:
+#             consent_total = int(round(len(house_lists[house])*proportion_consenting, 0))
+#             for i in range(consent_total):
+#                 week_sched[i%denom_test_week].append(house_lists[house][i])
+#         return week_sched
+        
     
     def _isolate_household(self, node):
       # get the household
@@ -457,6 +597,27 @@ class Model:
         """
 
         if self.states_dict[self.curr_time][neighbour] == "S":
+            infection_prob = self.graph.graph[node][neighbour]["weight"]
+            luck = random.random()
+            if luck <= infection_prob:
+                self.states_dict[self.curr_time + 1][neighbour] = "E"
+                self.infection_tree.add_edge(node, neighbour)
+                
+    def _infect_household_only(self, node, neighbour):
+        """Infect a the household members
+
+        Parameters
+        ----------
+        node : int
+            Label of the node
+        neighbour : int
+            Label of the neighbour node
+        """
+        this_household = self.graph.graph.nodes[node]['household']
+        household_neigh = self.graph.graph.nodes[neighbour]['household']
+        
+
+        if this_household == household_neigh and self.states_dict[self.curr_time][neighbour] == "S":
             infection_prob = self.graph.graph[node][neighbour]["weight"]
             luck = random.random()
             if luck <= infection_prob:

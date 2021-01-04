@@ -112,12 +112,12 @@ class Graph:
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
             self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
-            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.02)
-            first_year_extras = 3
-            upper_year_extras = 20
-            nodes = list(self.graph.nodes())
-            
-            self._add_extra_contacts(self.graph, nodes, 5)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.01)
+            # first_year_extras = 3
+            # upper_year_extras = 20
+            # nodes = list(self.graph.nodes())
+            # 
+            # self._add_extra_contacts(self.graph, nodes, 5)
             
             # self._add_extra_contacts(self.graph, nodes, 0.001)
             # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
