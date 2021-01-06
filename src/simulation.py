@@ -175,7 +175,7 @@ class Simulation:
 
         model = Model(self.params, self.graph,  self.verbose)
 
-        model.basic_simulation(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom)
+        model.basic_simulation_staggered(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom)
 
         return model.get_results()
     
