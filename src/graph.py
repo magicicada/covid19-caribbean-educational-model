@@ -111,8 +111,10 @@ class Graph:
         elif graph_type == 'powerlaw_cluster':
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
-            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=0.05)
-            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = 0.01)
+            secondary_ratio = 0.1
+            house_weight = 0.02*1.5
+            self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=house_weight)
+            self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = secondary_ratio*house_weight)
             # first_year_extras = 3
             # upper_year_extras = 20
             # nodes = list(self.graph.nodes())
@@ -244,13 +246,14 @@ class Graph:
         
         # first years
         # 
-        num_first_year =  math.floor(num_people/4)
-        print('number of first-years is ' + str(num_first_year))
-        household_id = self._sub_household(num_first_year, graph, 'first', household_id, household_size_distribution['first'], household_edge_weight=household_edge_weight)
+        num_first_year = 0
+        # math.floor(num_people/4)
+        # print('number of first-years is ' + str(num_first_year))
+        # household_id = self._sub_household(num_first_year, graph, 'first', household_id, household_size_distribution['first'], household_edge_weight=household_edge_weight)
         
         # upper years
         num_upper_year = num_people - num_first_year
-        household_id = self._sub_household(num_upper_year, graph, 'upper', household_id, household_size_distribution['upper'], household_edge_weight=0.0)
+        household_id = self._sub_household(num_upper_year, graph, 'upper', household_id, household_size_distribution['upper'], household_edge_weight=household_edge_weight)
         
         # print('\n\n people thus far ' + str(people_thus_far))
         
@@ -267,13 +270,15 @@ class Graph:
             for k,v in graph.nodes(data=True):
                 if v['year'] == cat:
                     these_nodes.append(k)
-            for i in range(number_activity_groups):
-                group_size = self.choose_from_distrib(activity_size_distribution_this)
-                group_members = list(random.sample(these_nodes, group_size))
-                for i in range(len(group_members)):
-                    for j in range(i+1, len(group_members)):
-                        if (group_members[i], group_members[j]) not in graph.edges():
-                            graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
+            if len(these_nodes) >0:
+                for i in range(number_activity_groups):
+                    group_size = self.choose_from_distrib(activity_size_distribution_this)
+                    
+                    group_members = list(random.sample(these_nodes, group_size))
+                    for i in range(len(group_members)):
+                        for j in range(i+1, len(group_members)):
+                            if (group_members[i], group_members[j]) not in graph.edges():
+                                graph.add_edge(group_members[i], group_members[j], weight=activity_edge_weight)
                         
     
     def _add_extra_contacts(self, graph, vertex_set, num_extras_per, extra_edge_weight=0.01):
