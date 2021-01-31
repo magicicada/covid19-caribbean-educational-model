@@ -126,6 +126,11 @@ for i in range(len(styles)):
         lines_of_interest = ['cum_cases']
         line_name = ''
         test_style_string = ''
+        
+        # print("\n\n\n REPRODUCTIVE NUMBERS:")
+        # print(repro_numbers)
+        # print("\n\n\n")
+        
        
         if test_style == 'household_schedule':
             if denom == 1:

@@ -88,6 +88,7 @@ class Model:
         self.graph = graph
         self.infection_tree = nx.DiGraph()
         self.console_log = console_log
+        self.overall_r = 0
         
 
 
@@ -211,16 +212,50 @@ class Model:
         # plt.hist(degrees)
         # # nx.draw_networkx(self.infection_tree)
         # plt.savefig('tree_degree_distrib_' + str(strftime("%Y-%m-%d%H:%M:%S", gmtime())) + '.pdf')
+    
+    def get_reproductive_number(self):
+        """Returns a float giving the mean out-degree from the infection tree, ignoring very recent infections
+        
 
+        Returns
+        -------
+        float
+            mean out-degree from infection tree, approximation of reproductive number
+        """
+        
+        time_cutoff = 30
+        
+        this_infection_tree = nx.DiGraph()
+        vertices_for_inclusion = []
+        out_degrees = []
+        
+        for (a, b) in self.infection_tree.edges():
+          if self.infection_tree[a][b]['time'] < time_cutoff:
+            vertices_for_inclusion.append(b)
+        for node in vertices_for_inclusion:
+          out_degrees.append(self.infection_tree.out_degree(node))
+        
+            
+            
+        # out_degrees = list(dict(this_infection_tree.out_degree(vertices_for_inclusion)).values())
+        print("\n\n\n all out degrees")
+        print(out_degrees)
+        print("\n\n\n")
+        
+        
+        mean_out_degree = sum(out_degrees)/len(out_degrees)
+        return mean_out_degree
+        
     def get_results(self):
         """Returns dictionary with results of the simulation
 
         The results are reported every 7 steps. - AMENDED TO DAILY
+        
 
         Returns
         -------
         dict
-            Dictionary in form {state: [number of nodes in given state]}
+            Dictionary in form {state: [number of nodes in given state]} plus one entry 'repro_number': float recording out_degree of infection tree
         """
         non_case = ['S', 'E', 'T_S']
 
@@ -239,6 +274,8 @@ class Model:
                   output_dict[state].append(counts[state])
             # print('appending ' + str(cum_case_count) + ' cumulative counts')
             output_dict['cum_cases'].append(cum_case_count)
+            
+        output_dict['repro_number'] = self.get_reproductive_number()
         return output_dict
 
     def print_state_counts(self, time, letter_only=False):
@@ -601,7 +638,7 @@ class Model:
             luck = random.random()
             if luck <= infection_prob:
                 self.states_dict[self.curr_time + 1][neighbour] = "E"
-                self.infection_tree.add_edge(node, neighbour)
+                self.infection_tree.add_edge(node, neighbour, time = self.curr_time )
                 
     def _infect_household_only(self, node, neighbour):
         """Infect a the household members
@@ -622,7 +659,7 @@ class Model:
             luck = random.random()
             if luck <= infection_prob:
                 self.states_dict[self.curr_time + 1][neighbour] = "E"
-                self.infection_tree.add_edge(node, neighbour)
+                self.infection_tree.add_edge(node, neighbour, time = self.curr_time )
 
     def _get_state_counts(self, time):
         """Return the number of nodes in given state at given time

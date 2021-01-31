@@ -199,8 +199,13 @@ class Simulation:
         # run simulations and collect results
         all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom) for _ in range(n)]
         
+        all_repro_numbers = []
+        for result in all_results:
+            all_repro_numbers.append(result['repro_number'])
+        
         
         all_states = list(Model.STATES.keys()) + ['cum_cases']
+        
         
         # get averaged results
         averaged = {}
@@ -208,13 +213,11 @@ class Simulation:
             state_lists = [state_dict[state] for state_dict in all_results]
             averaged[state] = [int(np.round(np.mean(item))) for item in zip(*state_lists)]
             
-        # TODO: working here     
+           
         top = {}
         bottom = {}
         for state in all_states:
             state_lists = sorted([state_dict[state] for state_dict in all_results])
-            # print(state)
-            # print(state_lists)
             length = len(state_lists)
             top[state] =  get_percentile(state_lists, 0.975)
             bottom[state] = get_percentile(state_lists, 0.025)
@@ -229,5 +232,11 @@ class Simulation:
                 states_at_timestep = {state: averaged[state][timestep] for state in Model.STATES}
                 biggest_state = max(states_at_timestep, key=states_at_timestep.get)
                 averaged[biggest_state][timestep] += self.params.population_size - total
+        
+        print("\n\n\n\n ALL REPRO NUMBERS")
+        print(all_repro_numbers)
+        print("\n\n\n")
 
+        
+        
         return (averaged, top, bottom)
