@@ -112,25 +112,11 @@ class Graph:
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
             secondary_ratio = 0.1
-            house_weight = 0.02*1.5
+            house_weight = infection_rate
+            print('\n\n\n GENERIC INFECTION RATE IS ' + str(house_weight))
             self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=house_weight)
             self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = secondary_ratio*house_weight)
-            # first_year_extras = 3
-            # upper_year_extras = 20
-            # nodes = list(self.graph.nodes())
-            # 
-            # self._add_extra_contacts(self.graph, nodes, 5)
-            
-            # self._add_extra_contacts(self.graph, nodes, 0.001)
-            # first_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='first']
-            # upper_years = [x for x,y in self.graph.nodes(data=True) if y['year']=='upper']
-            # # # 
-            # self._add_extra_contacts(self.graph, first_years, first_year_extras, extra_edge_weight=0.05)
-            # self._add_extra_contacts(self.graph, upper_years, upper_year_extras)
-            # 
-            # degrees = list(sorted(self.graph.degree, key=lambda x: x[1], reverse=True))
-            # for node,degree in degrees[:100]:
-            #     print(str(node) + "  " + self.graph.nodes[node]['year'] + "  " + str(degree))
+
             
         else:
             self._set_navigable_small_world_graph(
@@ -139,11 +125,7 @@ class Graph:
                 long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
                 decay=self.graph_config["params"]["decay"])
         
-        # print('number of edges: ' + str(len(self.graph.edges())))
-        # print('clustering coefficient '  + str(nx.average_clustering(self.graph)))
-        # self.draw_graph(graph_type + ".trial.pdf")
-        # self.plot_degree_distrib()
-        
+
         
     def set_group_interaction_edges(self, behaviour, node, other_nodes,
                                     group_size):
