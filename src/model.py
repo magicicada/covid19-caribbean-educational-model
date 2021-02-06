@@ -234,10 +234,7 @@ class Model:
             vertices_for_inclusion.append(b)
         for node in vertices_for_inclusion:
           out_degrees.append(self.infection_tree.out_degree(node))
-        
-            
-            
-        # out_degrees = list(dict(this_infection_tree.out_degree(vertices_for_inclusion)).values())
+
         print("\n\n\n all out degrees")
         print(out_degrees)
         print("\n\n\n")

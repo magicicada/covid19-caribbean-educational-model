@@ -2,6 +2,7 @@ import json
 import pickle
 
 import numpy as np
+from datetime import datetime
 
 from src.graph import Graph
 from src.model import Model
@@ -181,7 +182,7 @@ class Simulation:
     
     
     
-    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom = 1):
+    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom = 1, save_string = "trials_result"):
         """Run multiple simulations and return an averaged result
 
         Parameters
@@ -195,13 +196,23 @@ class Simulation:
             Dictionary with averaged results of multiple runs
             of a simulation
         """
+        now = datetime.today().isoformat()
+        save_string = save_string + "_" + str(now) + "_"
+
 
         # run simulations and collect results
         all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom) for _ in range(n)]
         
+        with open("state_" + save_string + ".json", 'w') as fout:
+            json.dump(all_results , fout)
+        
+        
         all_repro_numbers = []
         for result in all_results:
             all_repro_numbers.append(result['repro_number'])
+            
+        with open("reproductive_" + save_string + ".json", 'w') as fout:
+            json.dump(all_repro_numbers, fout)
         
         
         all_states = list(Model.STATES.keys()) + ['cum_cases']

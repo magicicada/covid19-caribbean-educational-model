@@ -1,0 +1,7 @@
+{
+    "app_input_filename": "data/contact-tracing/ct-app-input.json",
+    "app_input_values_filename": "data/contact-tracing/ct-app-input-values.json",
+    "community_data_filename": "data/contact-tracing/ct-community-data.json",
+    "infection_data_filename": "data/contact-tracing/ct-infection-data.json",
+    "simulation_config_filename": "data/contact-tracing/ct-simulation-config.json"
+}
