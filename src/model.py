@@ -92,7 +92,7 @@ class Model:
         
 
 
-    def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}, schedule_denom = 1):
+    def basic_simulation(self, testProb=0.1, false_positive=0.0, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.25, 'upper':0.75}, schedule_denom = 1, proportion_symptom = 0.5):
         """Run the simulation"""
         
         if test_style == 'household_schedule':
@@ -117,7 +117,7 @@ class Model:
 
         nodes = self.graph.graph.nodes
         will_have_sympts = {}
-        thresh_for_sympt = 0.4
+        thresh_for_sympt = proportion_symptom
         for node in nodes:
             will_have_sympts[node] = random.random() < thresh_for_sympt
                 
@@ -153,30 +153,22 @@ class Model:
                         if i >= num_tests:
                             break
             elif test_style == 'household_schedule':
-#                 TODO - implement this
-                  # get the schedule
+
                   period = 7
                   # schedule = [period][day]
                   denom = max(schedule.keys()) + 1
                   which_day = time%period
                   which_period = int(time/period)%denom
                   guys_for_test = schedule[which_period][which_day]
-                  # for period in schedule:
-                  #   for day in schedule[period]:
-                  #       print(str(period) + "  " + str(day) + " ")
-                  #       print(str(schedule[period][day]))
-                  # print(guys_for_test)
-                  # print('Household testing ' + str(len(guys_for_test)) + " nodes")
+
                   i = 0
                   for node in guys_for_test:
                     if self.testable(node):
                        self._do_testing(node, testProb=1.0, false_positive=false_positive, prob_trace_contact=prob_trace_contact)
                        i = i+1
-                  # print('Household actual tested ' + str(i) + " nodes")
+
 
             elif test_style == 'attribute_distrib':
-                # for k,v in nodes(data=True):
-                #     print(k,v)
                 self._do_strategic_testing_category(self.graph.graph, attribute_for_test, num_by_attr, test_prob_trace_contact=prob_trace_contact)
             elif test_style == 'alternate_null':
                 random_nodes = []
@@ -223,7 +215,7 @@ class Model:
             mean out-degree from infection tree, approximation of reproductive number
         """
         
-        time_cutoff = 30
+        time_cutoff = 80
         
         this_infection_tree = nx.DiGraph()
         vertices_for_inclusion = []

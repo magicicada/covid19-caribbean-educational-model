@@ -159,7 +159,7 @@ class Simulation:
 
         self.graph = loaded_graph
 
-    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom =1):
+    def run_single(self, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom =1, proportion_symptom =0.5):
         """Run a single simulation
 
         Returns
@@ -182,7 +182,7 @@ class Simulation:
     
     
     
-    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom = 1, save_string = "trials_result"):
+    def run_multiple(self, n, testProb=0.1, false_positive=0.023, prob_trace_contact=0.0, test_style=None, attribute_for_test='year', test_prob={'first':0.1, 'upper':0.1}, schedule_denom = 1, save_string = "trials_result", proportion_symptom = 0.5):
         """Run multiple simulations and return an averaged result
 
         Parameters
@@ -201,7 +201,7 @@ class Simulation:
 
 
         # run simulations and collect results
-        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom) for _ in range(n)]
+        all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom, proportion_symptom = proportion_symptom) for _ in range(n)]
         
         with open("state_" + save_string + ".json", 'w') as fout:
             json.dump(all_results , fout)
