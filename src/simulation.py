@@ -203,16 +203,16 @@ class Simulation:
         # run simulations and collect results
         all_results = [self.run_single(testProb=testProb, false_positive=false_positive, prob_trace_contact=prob_trace_contact, test_style=test_style, attribute_for_test=attribute_for_test, test_prob=test_prob, schedule_denom = schedule_denom, proportion_symptom = proportion_symptom) for _ in range(n)]
         
-        with open("state_" + save_string + ".json", 'w') as fout:
-            json.dump(all_results , fout)
+        # with open("state_" + save_string + ".json", 'w') as fout:
+        #     json.dump(all_results , fout)
         
         
         all_repro_numbers = []
         for result in all_results:
             all_repro_numbers.append(result['repro_number'])
             
-        with open("reproductive_" + save_string + ".json", 'w') as fout:
-            json.dump(all_repro_numbers, fout)
+        # with open("reproductive_" + save_string + ".json", 'w') as fout:
+        #     json.dump(all_repro_numbers, fout)
         
         
         all_states = list(Model.STATES.keys()) + ['cum_cases']
@@ -247,6 +247,11 @@ class Simulation:
         print("\n\n\n\n ALL REPRO NUMBERS")
         print(all_repro_numbers)
         print("\n\n\n")
+        
+        #  we want a time series of the mean, top, bottom of the reproductive numbers
+        averaged['repro_rate'] = get_percentile(all_repro_numbers, 0.5)
+        top['repro_rate'] = get_percentile(all_repro_numbers, 0.975)
+        bottom['repro_rate'] = get_percentile(all_repro_numbers, 0.025)
 
         
         

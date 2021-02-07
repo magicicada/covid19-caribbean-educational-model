@@ -205,6 +205,40 @@ class Model:
         # # nx.draw_networkx(self.infection_tree)
         # plt.savefig('tree_degree_distrib_' + str(strftime("%Y-%m-%d%H:%M:%S", gmtime())) + '.pdf')
     
+    
+    def get_reproductive_number_time_series(self):
+        """Returns a series of floats giving the mean out-degree from the infection tree for individuals exposed at each time, 
+        
+
+        Returns
+        -------
+        float
+            time series of mean out-degree from infection tree, approximation of reproductive number
+        """
+        
+        # time_cutoff = 80
+        
+        times_to_degrees = {}
+        time_series_of_degrees = []
+        
+        this_infection_tree = nx.DiGraph()
+        vertices_for_inclusion = []
+        out_degrees = []
+        
+        for (a, b) in self.infection_tree.edges():
+          time = self.infection_tree[a][b]['time']
+          if time not in times_to_degrees:
+            times_to_degrees[time] = []
+          times_to_degrees[time].append(self.infection_tree.out_degree(b))
+          
+        for i in range(max(times_to_degrees.keys())):
+          if i not in times_to_degrees:
+            time_series_of_degrees.append(None)
+          else:
+            time_series_of_degrees.append(sum(times_to_degrees[i])/len(times_to_degrees[i]))
+          
+        return time_series_of_degrees
+    
     def get_reproductive_number(self):
         """Returns a float giving the mean out-degree from the infection tree, ignoring very recent infections
         
@@ -264,7 +298,7 @@ class Model:
             # print('appending ' + str(cum_case_count) + ' cumulative counts')
             output_dict['cum_cases'].append(cum_case_count)
             
-        output_dict['repro_number'] = self.get_reproductive_number()
+        output_dict['repro_number'] = self.get_reproductive_number_time_series()
         return output_dict
 
     def print_state_counts(self, time, letter_only=False):

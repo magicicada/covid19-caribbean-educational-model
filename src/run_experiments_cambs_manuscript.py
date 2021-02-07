@@ -81,8 +81,12 @@ simulation.set_app_input_from_file(app_input_filename)
 styles = ['household_schedule',None, 'No_test']
 
 plt.clf()
+# plt.figure(figsize=(20, 4))
 # fig, axs = plt.subplots(len(styles), len(tracing_efficiencies), figsize=(20, 20))
-axes = plt.gca()
+# axes = plt.gca()
+fig, (axes, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+
+
 max_y = 5000
 axes.set_ylim([0, max_y])
 
@@ -116,12 +120,30 @@ for i in range(len(styles)):
         # run the simulation
         (results, top, bottom) = simulation.run_multiple(args.number_of_runs, testProb=testProb, false_positive=0.0, prob_trace_contact=tracing_efficiency,
                                           test_style=test_style, test_prob=test_distrib, schedule_denom = denom, proportion_symptom=sympt_from_data)
-        results['A+I'] =  [x + y for x, y in zip(results['A'], results['I'])]
-        results['A+I+T_P'] = [x + y for x, y in zip(results['A+I'], results['T_P'])]
-        results['S+T_S'] = [x + y for x, y in zip(results['S'], results['T_S'])]
-        top['S+T_S'] = [x + y for x, y in zip(top['S'], top['T_S'])]
-        results['Cum_Cases'] = [total-x for x in results['S+T_S']]
-        top['Cum_Cases'] = [total-x for x in top['S+T_S']]
+        
+        
+        output_name_this = str(test_style) + "_" + str(denom) + "_results.json"
+        json_str_results = json.dumps(results)
+        with open(output_name_this, "w") as f:
+            f.write(json_str_results)
+            
+        output_name_this = str(test_style) + "_" + str(denom) + "_top.json"
+        json_str_top = json.dumps(top)
+        with open(output_name_this, "w") as f:
+            f.write(json_str_top)
+            
+        output_name_this = str(test_style) + "_" + str(denom) + "_bottom.json"
+        json_str_bottom = json.dumps(bottom)
+        with open(output_name_this, "w") as f:
+            f.write(json_str_bottom)
+            
+        
+        # results['A+I'] =  [x + y for x, y in zip(results['A'], results['I'])]
+        # results['A+I+T_P'] = [x + y for x, y in zip(results['A+I'], results['T_P'])]
+        # results['S+T_S'] = [x + y for x, y in zip(results['S'], results['T_S'])]
+        # top['S+T_S'] = [x + y for x, y in zip(top['S'], top['T_S'])]
+        # results['Cum_Cases'] = [total-x for x in results['S+T_S']]
+        # top['Cum_Cases'] = [total-x for x in top['S+T_S']]
 
         lines_of_interest = ['cum_cases']
         line_name = ''
@@ -145,15 +167,25 @@ for i in range(len(styles)):
                 axes.set_ylim([0, max_y])
                 axes.plot(range(len(results[line])), results[line], label=test_style_string, color = test_style_colour)
                 axes.fill_between(range(len(top[line])), top[line], y2 = bottom[line], color = test_style_colour, alpha = 0.2)
+                
                 print(line + str(results[line]))
                 print(line + str(top[line]))
         # axes.plot(true_x, true_y, color = 'black', label='Data')
         axes.legend()
         axes.set_ylim([0, max_y])
-        plt.xlabel('Day')
-        plt.ylabel('Number of cumulative cases')
+        axes.set(xlabel = 'Day')
+        axes.set(ylabel = 'Number of cumulative cases')
         axes.set_title('Cumulative cases over time under differing testing strategies')
         # plt.savefig('model_output_graph-' +graph_type + "_testingProb-" + str(testProb) + "tracing_eff-" + str(tracing_efficiency) + '.png')
+        
+        repro_name = 'repro_rate'
+        repro_med = results[repro_name]
+        ax2.plot(range(len(repro_med)), repro_med, label=test_style_string, color = test_style_colour)
+        ax2.fill_between(range(len(top[repro_name])), top[repro_name], y2 = bottom[repro_name], color = test_style_colour, alpha = 0.2)
+        
+        
+        
+        
         
         if args.output_filename:
             json_str = json.dumps(results)
@@ -170,6 +202,6 @@ for i in range(len(styles)):
         if not args.quiet:
             print()
             print(datetime.now() - start_time)
-axes = plt.gca()
-axes.set_ylim([0,max_y])
+# axes = plt.gca()
+# axes.set_ylim([0,max_y])
 plt.savefig('forCambridge_' + graph_type+ '.png')
