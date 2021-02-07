@@ -16,7 +16,8 @@ def get_percentile(list_of_lists, what_percent):
         for position in range(length):
             this_pos = []
             for this_list in list_of_lists:
-                this_pos.append(this_list[position])
+                if this_list[position] != None:
+                   this_pos.append(this_list[position])
             this_pos = sorted(this_pos)
             perc_pos = int(round(what_percent*(len(this_pos)-1), 0))
             # print(perc_pos)
