@@ -112,8 +112,9 @@ class Graph:
             self._set_powerlaw_cluster(age_structure=age_structure, edgesPerVert=edgesPerVert)
         elif graph_type == 'education_layered':
             secondary_ratio = 0.1
-            house_weight = infection_rate
-            print('\n\n\n GENERIC INFECTION RATE IS ' + str(house_weight))
+            house_weight = self.infection_rate
+            print("\n\n\n HOUSEHOLD INFECTION RATE IS "+ str(house_weight))
+            
             self._set_household_groupings(age_structure=age_structure, household_size_distribution=household_size_distribution, household_edge_weight=house_weight)
             self._add_secondary_groupings(number_activity_groups, activity_size_distribution=activity_size_distribution, activity_edge_weight = secondary_ratio*house_weight)
 
@@ -124,8 +125,8 @@ class Graph:
                 short_connection_diameter=self.graph_config["params"]["short_connection_diameter"],
                 long_connection_diameter=self.graph_config["params"]["long_connection_diameter"],
                 decay=self.graph_config["params"]["decay"])
-        
 
+        
         
     def set_group_interaction_edges(self, behaviour, node, other_nodes,
                                     group_size):
@@ -271,16 +272,7 @@ class Graph:
             j  = random.randint(0,n-1)
             graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
             
-#         TODO - change this to uniformly at random, ER style
-        # pref_att_graph = nx.barabasi_albert_graph(n, p)
-        # pref_att_graph = nx.fast_gnp_random_graph(n, p)
-        # nodes_list = list(pref_att_graph.nodes())
-        # for i in range(len(nodes_list)):
-        #     for j in range(i+1, len(nodes_list)):
-        #         if (i, j) in pref_att_graph.edges() and (vertex_set[i], vertex_set[i]) not in graph.edges():
-        #             graph.add_edge(vertex_set[i], vertex_set[j], weight=extra_edge_weight)
-        # 
-        
+
     
     
     

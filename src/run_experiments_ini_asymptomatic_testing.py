@@ -153,4 +153,4 @@ for test_prob in test_probs:
             print(datetime.now() - start_time)
 axes = plt.gca()
 axes.set_ylim([0,max_y])
-plt.savefig('forCambridge_' + graph_type+ '.png')
+plt.savefig('for_ini_preprint_' + graph_type+ '.png')
