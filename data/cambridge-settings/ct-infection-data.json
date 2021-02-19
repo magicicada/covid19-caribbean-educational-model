@@ -1,5 +1,5 @@
 {
-    "generic_infection": 0.03,
+    "generic_infection": 0.016,
     "state_transitions": {
         "T_S":{"T_S": {"(0, 9)": 0.0,
                     "(10, 19)": 0.93,

@@ -1,0 +1,571 @@
+
+
+
+ HOUSEHOLD INFECTION RATE IS 0.016
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 337
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 691 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.1093473580491386
+===========
+
+
+
+Time: 42
+Susceptible          8211
+Exposed               142
+Presymptomatic         76
+Asymptomatic            0
+Symptomatic            50
+Hospitalised            0
+Dead                    0
+Recovered             498
+Tested_Isolated_Positive       262
+Tested_Isolated_Susceptible      3542
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 393
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 708 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.12252701896089721
+===========
+
+
+
+Time: 42
+Susceptible          8015
+Exposed               162
+Presymptomatic         82
+Asymptomatic            0
+Symptomatic            37
+Hospitalised            0
+Dead                    0
+Recovered             494
+Tested_Isolated_Positive       321
+Tested_Isolated_Susceptible      3670
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 291
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 672 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.10238595775978974
+===========
+
+
+
+Time: 42
+Susceptible          8468
+Exposed               160
+Presymptomatic         68
+Asymptomatic            0
+Symptomatic            42
+Hospitalised            0
+Dead                    0
+Recovered             425
+Tested_Isolated_Positive       257
+Tested_Isolated_Susceptible      3361
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 399
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 767 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.11834834081797659
+===========
+
+
+
+Time: 42
+Susceptible          7706
+Exposed               186
+Presymptomatic         88
+Asymptomatic            0
+Symptomatic            50
+Hospitalised            0
+Dead                    0
+Recovered             468
+Tested_Isolated_Positive       359
+Tested_Isolated_Susceptible      3924
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 417
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 832 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.11911877088789977
+===========
+
+
+
+Time: 42
+Susceptible          7348
+Exposed               161
+Presymptomatic         89
+Asymptomatic            0
+Symptomatic            46
+Hospitalised            0
+Dead                    0
+Recovered             548
+Tested_Isolated_Positive       371
+Tested_Isolated_Susceptible      4218
+------------------------------
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+
+
+
+
+ ALL REPRO NUMBERS
+[[1.8914728682170543, 1.6257668711656441, 1.142156862745098, 0.851063829787234, 0.6278195488721805, 0.1694915254237288], [1.7919463087248322, 1.5354838709677419, 0.9774774774774775, 1.065891472868217, 0.6325088339222615, 0.12734082397003746], [1.6666666666666667, 1.789855072463768, 1.3333333333333333, 0.9181818181818182, 0.6977777777777778, 0.17391304347826086], [1.5609756097560976, 1.5426829268292683, 1.4306930693069306, 1.1713286713286712, 0.6477611940298508, 0.152317880794702], [1.7816901408450705, 1.4337349397590362, 1.3106060606060606, 0.9794117647058823, 0.5648414985590778, 0.08148148148148149]]
+
+
+
+
+length of list is 6
+length of list is 6
+length of list is 6
+cum_cases[50, 56, 62, 70, 79, 89, 98, 108, 116, 127, 142, 153, 168, 183, 199, 217, 235, 255, 276, 296, 322, 343, 364, 388, 412, 439, 463, 491, 518, 548, 580, 610, 639, 667, 696, 726, 757, 794, 824, 858, 893, 926]
+cum_cases[50, 58, 67, 73, 85, 98, 110, 119, 129, 144, 163, 172, 186, 198, 218, 237, 257, 277, 298, 317, 344, 363, 392, 416, 439, 474, 509, 531, 563, 603, 645, 685, 719, 749, 788, 831, 864, 909, 939, 981, 1018, 1054]
+
+0:00:11.276284
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 275
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 457 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.10948366296113195
+===========
+
+
+
+Time: 42
+Susceptible          8911
+Exposed               106
+Presymptomatic         33
+Asymptomatic            0
+Symptomatic            10
+Hospitalised            0
+Dead                    0
+Recovered             303
+Tested_Isolated_Positive       210
+Tested_Isolated_Susceptible      3208
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 327
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 573 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.11706029434524069
+===========
+
+
+
+Time: 42
+Susceptible          8325
+Exposed               125
+Presymptomatic         53
+Asymptomatic            0
+Symptomatic            21
+Hospitalised            0
+Dead                    0
+Recovered             389
+Tested_Isolated_Positive       249
+Tested_Isolated_Susceptible      3619
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 304
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 502 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.11303655580385152
+===========
+
+
+
+Time: 42
+Susceptible          8948
+Exposed               115
+Presymptomatic         54
+Asymptomatic            0
+Symptomatic            13
+Hospitalised            0
+Dead                    0
+Recovered             351
+Tested_Isolated_Positive       203
+Tested_Isolated_Susceptible      3097
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 302
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 572 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.11005577906666845
+===========
+
+
+
+Time: 42
+Susceptible          8412
+Exposed               118
+Presymptomatic         63
+Asymptomatic            0
+Symptomatic            15
+Hospitalised            0
+Dead                    0
+Recovered             371
+Tested_Isolated_Positive       242
+Tested_Isolated_Susceptible      3560
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 178
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 372 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.09196131305069849
+===========
+
+
+
+Time: 42
+Susceptible          9699
+Exposed                69
+Presymptomatic         25
+Asymptomatic            0
+Symptomatic            14
+Hospitalised            0
+Dead                    0
+Recovered             268
+Tested_Isolated_Positive       128
+Tested_Isolated_Susceptible      2578
+------------------------------
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+
+
+
+
+ ALL REPRO NUMBERS
+[[1.6024096385542168, 1.3473684210526315, 1.300751879699248, 1.1702127659574468, 0.6318681318681318, 0.13125], [1.5442176870748299, 1.1353383458646618, 1.1265822784810127, 1.053475935828877, 0.6460176991150443, 0.1457286432160804], [1.4324324324324325, 1.3211678832116789, 1.2628205128205128, 0.958041958041958, 0.631578947368421, 0.15873015873015872], [1.67, 1.4592592592592593, 1.335483870967742, 0.9423076923076923, 0.6649746192893401, 0.16517857142857142], [1.1388888888888888, 1.4444444444444444, 0.9888888888888889, 0.8775510204081632, 0.7009345794392523, 0.19444444444444445]]
+
+
+
+
+length of list is 6
+length of list is 6
+length of list is 6
+cum_cases[50, 54, 60, 66, 75, 83, 90, 98, 106, 115, 123, 135, 143, 152, 165, 177, 190, 203, 218, 232, 244, 256, 270, 284, 298, 315, 330, 345, 361, 378, 396, 411, 431, 451, 470, 486, 505, 525, 545, 565, 585, 603]
+cum_cases[50, 56, 61, 70, 86, 96, 106, 116, 130, 136, 145, 162, 174, 185, 196, 213, 226, 242, 266, 282, 291, 306, 324, 340, 354, 378, 390, 413, 426, 442, 463, 486, 510, 527, 549, 571, 591, 619, 644, 667, 689, 712]
+
+0:00:19.783594
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 610
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 1261 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.15727577602761095
+===========
+
+
+
+Time: 42
+Susceptible          6708
+Exposed               349
+Presymptomatic        233
+Asymptomatic            0
+Symptomatic           180
+Hospitalised            0
+Dead                    0
+Recovered             846
+Tested_Isolated_Positive       531
+Tested_Isolated_Susceptible      3934
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 625
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 1233 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.15351722433523884
+===========
+
+
+
+Time: 42
+Susceptible          6955
+Exposed               336
+Presymptomatic        217
+Asymptomatic            0
+Symptomatic           194
+Hospitalised            0
+Dead                    0
+Recovered             833
+Tested_Isolated_Positive       525
+Tested_Isolated_Susceptible      3721
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 697
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 1330 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.17233401367595427
+===========
+
+
+
+Time: 42
+Susceptible          6232
+Exposed               363
+Presymptomatic        224
+Asymptomatic            0
+Symptomatic           175
+Hospitalised            0
+Dead                    0
+Recovered             947
+Tested_Isolated_Positive       617
+Tested_Isolated_Susceptible      4223
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 720
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 1358 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.1692273823159587
+===========
+
+
+
+Time: 42
+Susceptible          6221
+Exposed               365
+Presymptomatic        246
+Asymptomatic            0
+Symptomatic           193
+Hospitalised            0
+Dead                    0
+Recovered             987
+Tested_Isolated_Positive       623
+Tested_Isolated_Susceptible      4146
+------------------------------
+In single run, test distribution is {'first': 0, 'upper': 1.0}
+
+
+
+ NUMBER WITHIN-HOUSEHOLD : 628
+===========
+
+
+
+NUMBER INFECTED HOUSEHOLDS 1278 of 2545
+
+
+
+ MEAN SAR IN HOUSE : 0.16376218797005332
+===========
+
+
+
+Time: 42
+Susceptible          6649
+Exposed               350
+Presymptomatic        205
+Asymptomatic            0
+Symptomatic           172
+Hospitalised            0
+Dead                    0
+Recovered             887
+Tested_Isolated_Positive       571
+Tested_Isolated_Susceptible      3947
+------------------------------
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+length of list is 42
+
+
+
+
+ ALL REPRO NUMBERS
+[[2.0963855421686746, 2.045643153526971, 1.5649202733485195, 1.0714285714285714, 0.5444444444444444, 0.10193321616871705], [2.1059907834101383, 1.88, 1.2892938496583144, 1.0729783037475344, 0.5908346972176759, 0.09811320754716982], [1.9547738693467336, 1.60828025477707, 1.4560185185185186, 1.1264957264957265, 0.5991792065663475, 0.12808641975308643], [2.1176470588235294, 1.8202614379084967, 1.441304347826087, 1.0549927641099854, 0.4786666666666667, 0.1243432574430823], [1.9069767441860466, 1.6867924528301887, 1.4101382488479262, 1.0658135283363803, 0.6095238095238096, 0.14431239388794567]]
+
+
+
+
+length of list is 6
+length of list is 6
+length of list is 6
+cum_cases[50, 55, 64, 75, 87, 104, 117, 136, 155, 177, 197, 219, 244, 271, 297, 331, 364, 402, 445, 490, 533, 579, 625, 676, 726, 782, 838, 899, 960, 1025, 1091, 1165, 1229, 1298, 1367, 1434, 1504, 1575, 1656, 1729, 1798, 1881]
+cum_cases[50, 57, 68, 77, 93, 114, 129, 152, 170, 193, 215, 229, 253, 286, 318, 353, 384, 430, 468, 524, 571, 618, 673, 730, 777, 843, 909, 974, 1061, 1130, 1205, 1289, 1358, 1421, 1505, 1589, 1653, 1731, 1803, 1883, 1961, 2049]
+
+0:00:35.420623

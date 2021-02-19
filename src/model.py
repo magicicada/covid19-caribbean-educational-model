@@ -89,6 +89,7 @@ class Model:
         self.infection_tree = nx.DiGraph()
         self.console_log = console_log
         self.overall_r = 0
+        self.within_household = 0
         
 
 
@@ -120,7 +121,7 @@ class Model:
         thresh_for_sympt = proportion_symptom
         for node in nodes:
             will_have_sympts[node] = random.random() < thresh_for_sympt
-                
+        self.will_have_sympts = will_have_sympts
         
         num_tests = int(testProb*len(nodes))
 #             we need to generate a number of tests for each category
@@ -196,7 +197,9 @@ class Model:
             # list(map(self._do_testing, nodes))
 
             # self._remove_interactions()
-
+        print("\n\n\n NUMBER WITHIN-HOUSEHOLD : " + str(self.within_household) + "\n===========\n\n\n" )
+        print("\n\n\n MEAN SAR IN HOUSE : " + str(self.get_within_household_SAR()) + "\n===========\n\n\n" )
+        
         if self.console_log:
             self.print_state_counts(self.graph.time_horizon)
         # plt.clf()
@@ -205,6 +208,33 @@ class Model:
         # # nx.draw_networkx(self.infection_tree)
         # plt.savefig('tree_degree_distrib_' + str(strftime("%Y-%m-%d%H:%M:%S", gmtime())) + '.pdf')
     
+    
+    def get_within_household_SAR(self):
+      households_to_size = {}
+      for node in self.graph.graph.nodes():
+        this_house = self.graph.graph.nodes[node]['household']
+        if this_house not in households_to_size:
+          households_to_size[this_house] = 0
+        households_to_size[this_house] = households_to_size[this_house] + 1
+      households_to_infections = {}
+      for node in self.infection_tree.nodes():
+        this_house =   self.graph.graph.nodes[node]['household']
+        if this_house not in households_to_infections:
+          households_to_infections[this_house] = 0
+        households_to_infections[this_house] = households_to_infections[this_house] + 1
+        
+      print("NUMBER INFECTED HOUSEHOLDS " + str(len(households_to_infections.keys())) + " of " + str(len(households_to_size.keys())))
+        
+      list_of_ARs = []
+      for house in households_to_infections:
+        this_inf = households_to_infections[house]
+        house_size = households_to_size[house]
+        if house_size > 1:
+           list_of_ARs.append(float(this_inf - 1)/float(house_size -1))
+        
+      return sum(list_of_ARs)/len(list_of_ARs)
+        
+      
     
     def get_reproductive_number_time_series(self):
         """Returns a series of floats giving the mean out-degree from the infection tree for individuals exposed at each time, 
@@ -236,8 +266,25 @@ class Model:
             time_series_of_degrees.append(None)
           else:
             time_series_of_degrees.append(sum(times_to_degrees[i])/len(times_to_degrees[i]))
+        
+        max_time = max(times_to_degrees.keys())
+        intervals = list(range(0, max_time, 7))
+        weeks_to_reps = {}
+        for week in intervals:
+          if week not in weeks_to_reps:
+            weeks_to_reps[week] = []
+          for time in times_to_degrees:
+            if time >= week and time <= week+7:
+              weeks_to_reps[week].extend(times_to_degrees[time])
+              
+        weekly_time_series = []
+        for week in intervals:
+          weekly_time_series.append(float(sum(weeks_to_reps[week]))/float(len(weeks_to_reps[week])))
           
-        return time_series_of_degrees
+              
+          
+        return weekly_time_series
+        # time_series_of_degrees
     
     def get_reproductive_number(self):
         """Returns a float giving the mean out-degree from the infection tree, ignoring very recent infections
@@ -655,13 +702,22 @@ class Model:
         neighbour : int
             Label of the neighbour node
         """
+        asympt_ratio = 0.15
+        multiplier = asympt_ratio
+        if self.will_have_sympts[node]:
+          multiplier = 1.0
+        
+        this_household = self.graph.graph.nodes[node]['household']
+        household_neigh = self.graph.graph.nodes[neighbour]['household']
 
         if self.states_dict[self.curr_time][neighbour] == "S":
             infection_prob = self.graph.graph[node][neighbour]["weight"]
             luck = random.random()
-            if luck <= infection_prob:
+            if luck <= infection_prob*multiplier:
                 self.states_dict[self.curr_time + 1][neighbour] = "E"
                 self.infection_tree.add_edge(node, neighbour, time = self.curr_time )
+                if this_household == household_neigh:
+                  self.within_household = self.within_household + 1
                 
     def _infect_household_only(self, node, neighbour):
         """Infect a the household members
@@ -673,16 +729,23 @@ class Model:
         neighbour : int
             Label of the neighbour node
         """
+        asympt_ratio = 0.15
+        multiplier = asympt_ratio
+        if self.will_have_sympts[node]:
+          multiplier = 1.0
+        
+        
         this_household = self.graph.graph.nodes[node]['household']
         household_neigh = self.graph.graph.nodes[neighbour]['household']
         
 
-        if this_household == household_neigh and self.states_dict[self.curr_time][neighbour] == "S":
+        if this_household == household_neigh and (self.states_dict[self.curr_time][neighbour] == "S" or self.states_dict[self.curr_time][neighbour] == "T_S"):
             infection_prob = self.graph.graph[node][neighbour]["weight"]
             luck = random.random()
-            if luck <= infection_prob:
+            if luck <= infection_prob*multiplier:
                 self.states_dict[self.curr_time + 1][neighbour] = "E"
                 self.infection_tree.add_edge(node, neighbour, time = self.curr_time )
+                self.within_household = self.within_household + 1
 
     def _get_state_counts(self, time):
         """Return the number of nodes in given state at given time

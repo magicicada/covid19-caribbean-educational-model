@@ -1,6 +1,6 @@
 {
     "time_horizon": 63,
-    "num_infected": 45,
+    "num_infected": 50,
     "graph_config": {
         "name": "navigable_small_world",
         "params": {
